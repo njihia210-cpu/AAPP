@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="de" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Alena</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0d0a22">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/favicon.png" sizes="32x32">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Alena">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="/styles.css">
+<script src="/theme.js"></script>
+<style>
+  .card.soon { cursor: default; }
+  .card.soon:hover { transform: none; }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <a class="brand" href="/app"><img src="/icons/logo.png" alt="" width="38" height="38"><span>Alena</span></a>
+    <div style="display:flex;align-items:center;gap:0.7rem">
+      <span class="tiny" id="whoami"></span>
+      <button class="btn btn-quiet btn-sm" id="logoutBtn">Abmelden</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap" style="padding-block:2.5rem 3rem">
+  <div class="section-head">
+    <div class="eyebrow" id="greetLabel">Guten Tag</div>
+    <h2 id="greet">Willkommen</h2>
+    <p>Deine Apps. Wir schalten sie eine nach der anderen frei.</p>
+  </div>
+
+  <div class="msg" id="msg" role="status"></div>
+
+  <div id="pushBox" class="feature" style="margin-bottom:2rem;grid-template-columns:1fr auto" hidden>
+    <div>
+      <h3 style="margin:0 0 0.3rem">Erinnerungen einschalten</h3>
+      <p class="tiny" id="pushText" style="margin:0">Damit Alena dich an Medikamente, Aufgaben und Lernblöcke erinnern kann.</p>
+    </div>
+    <button class="btn btn-primary" id="pushBtn">Erlauben</button>
+  </div>
+
+  <div class="grid" id="modules"></div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-bottom" style="margin-top:0;border-top:none">
+      <span>Alena</span>
+      <div class="theme-switch" role="group" aria-label="Darstellung">
+        <button type="button" data-theme-btn="dark" aria-pressed="true">Dunkel</button>
+        <button type="button" data-theme-btn="light" aria-pressed="false">Hell</button>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="/ambient.js" defer></script>
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const api = async (url, options = {}) => {
+    const res = await fetch(url, {
+      headers: { 'content-type': 'application/json' },
+      ...options,
+      body: options.body ? JSON.stringify(options.body) : undefined,
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || 'Fehler');
+    return data;
+  };
+  const flash = (t, kind = 'ok') => {
+    const el = $('msg'); el.textContent = t; el.className = `msg ${kind} show`;
+    setTimeout(() => el.classList.remove('show'), 6000);
+  };
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+    || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+
+  const b64ToUint8 = (base64) => {
+    const pad = '='.repeat((4 - (base64.length % 4)) % 4);
+    const raw = atob((base64 + pad).replace(/-/g, '+').replace(/_/g, '/'));
+    return Uint8Array.from([...raw].map((c) => c.charCodeAt(0)));
+  };
+
+  $('logoutBtn').addEventListener('click', async () => {
+    await api('/api/auth?do=logout', { method: 'POST' }).catch(() => {});
+    location.href = '/';
+  });
+
+  async function setupPush(vapidKey) {
+    const box = $('pushBox');
+    if (!vapidKey) return;
+
+    if (isIOS && !standalone) {
+      box.hidden = false;
+      $('pushText').textContent =
+        'Auf dem iPhone zuerst über Safari → Teilen → „Zum Home-Bildschirm“ hinzufügen. Danach Alena über das Symbol öffnen und Mitteilungen erlauben.';
+      $('pushBtn').hidden = true;
+      return;
+    }
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+    if (Notification.permission === 'granted') return;
+
+    box.hidden = false;
+    $('pushBtn').addEventListener('click', async () => {
+      try {
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') return flash('Mitteilungen wurden nicht erlaubt.', 'error');
+        const reg = await navigator.serviceWorker.ready;
+        const sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: b64ToUint8(vapidKey),
+        });
+        await api('/api/push?do=subscribe', {
+          method: 'POST',
+          body: { subscription: sub.toJSON(), label: navigator.platform || 'Gerät' },
+        });
+        box.hidden = true;
+        flash('Erinnerungen sind aktiv.');
+      } catch (err) {
+        flash(err.message, 'error');
+      }
+    });
+  }
+
+  (async () => {
+    if ('serviceWorker' in navigator) {
+      try { await navigator.serviceWorker.register('/sw.js'); } catch {}
+    }
+    let me;
+    try { me = await api('/api/auth?do=me'); } catch { me = { user: null }; }
+    if (!me.user) return void (location.href = '/');
+
+    $('whoami').textContent = me.user.name || me.user.username;
+    $('greet').textContent = `Hallo ${(me.user.name || me.user.username).split(' ')[0]}`;
+    const h = new Date().getHours();
+    $('greetLabel').textContent = h < 11 ? 'Guten Morgen' : h < 18 ? 'Guten Tag' : 'Guten Abend';
+
+    const grid = $('modules');
+    const enabled = me.modules.filter((m) => me.user.modules?.[m.id]);
+    if (!enabled.length) {
+      grid.innerHTML = '<div class="card"><h3>Noch nichts freigeschaltet</h3><p>Der Host muss deine Apps noch aktivieren.</p></div>';
+    }
+    for (const m of enabled) {
+      const live = m.status === 'live' && m.href;
+      const el = document.createElement(live ? 'a' : 'article');
+      el.className = live ? 'card' : 'card soon';
+      if (live) el.href = m.href;
+      el.innerHTML = `<div class="icon">${esc(m.icon)}</div><h3>${esc(m.name)}</h3>
+        <p>${esc(m.desc)}</p>
+        <span class="badge">${live ? 'Öffnen →' : 'Kommt bald'}</span>`;
+      grid.appendChild(el);
+    }
+
+    setupPush(me.vapidPublicKey);
+  })();
+})();
+</script>
+</body>
+</html>
