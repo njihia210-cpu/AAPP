@@ -1,0 +1,611 @@
+<!doctype html>
+<html lang="de" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Host – Alena</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0d0a22">
+<link rel="icon" href="/favicon.png" sizes="32x32">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="/styles.css">
+<script src="/theme.js"></script>
+<style>
+  .userlist, .reqlist { display: grid; gap: 0.9rem; }
+  .user, .req {
+    padding: 1.2rem 1.3rem; border-radius: var(--radius);
+    background: var(--surface); border: 1px solid var(--line);
+  }
+  .user.locked { opacity: 0.62; border-style: dashed; }
+  .req.done { opacity: 0.55; }
+  .user-head { display: flex; flex-wrap: wrap; gap: 0.8rem; align-items: center; justify-content: space-between; }
+  .who { display: flex; align-items: center; gap: 0.75rem; min-width: 0; }
+  .avatar {
+    flex: none; width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center;
+    background: var(--accent); color: #fff; font-weight: 700; font-size: 0.95rem;
+  }
+  .who b { display: block; font-size: 1rem; font-weight: 600; letter-spacing: -0.01em; }
+  .who small { color: var(--text-dim); font-size: 0.8rem; }
+  .tag {
+    display: inline-block; padding: 0.15rem 0.55rem; border-radius: 999px;
+    font-size: 0.7rem; letter-spacing: 0.04em; text-transform: uppercase; font-weight: 600;
+    border: 1px solid var(--line-strong); color: var(--eyebrow); margin-left: 0.5rem;
+  }
+  .tag.host { background: var(--accent-soft); }
+  .tag.locked { color: #c02a55; border-color: rgba(220,60,100,0.45); }
+  :root[data-theme="dark"] .tag.locked { color: #ffc2ce; }
+  .tag.neu { background: var(--accent); color: #fff; border-color: transparent; }
+  .actions { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+  .modrow { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--line-soft); }
+  .chip {
+    display: inline-flex; align-items: center; gap: 0.4rem; cursor: pointer;
+    padding: 0.4rem 0.8rem; border-radius: 999px; font-size: 0.83rem; font-weight: 500;
+    border: 1px solid var(--line); background: var(--input-bg); color: var(--text-dim);
+    transition: all 0.18s ease;
+  }
+  .chip[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--line-strong); color: var(--text); }
+  .chip:hover { border-color: var(--line-strong); }
+  .chip .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; opacity: 0.4; }
+  .chip[aria-pressed="true"] .dot { background: var(--peri-400); opacity: 1; box-shadow: 0 0 8px var(--peri-400); }
+  .panel { padding: 1.6rem; border-radius: var(--radius-lg); background: var(--surface); border: 1px solid var(--line); }
+  .layout { display: grid; gap: 1.6rem; grid-template-columns: minmax(0,1fr) 340px; align-items: start; }
+  @media (max-width: 980px) { .layout { grid-template-columns: 1fr; } }
+  .empty { color: var(--text-dim); font-size: 0.92rem; padding: 2rem; text-align: center; }
+  .note { margin: 0.8rem 0 0; padding: 0.7rem 0.9rem; border-radius: 12px; background: var(--input-bg);
+          border: 1px solid var(--line); font-size: 0.9rem; color: var(--text-soft); }
+  h3.sec { margin: 2.6rem 0 1rem; font-size: 1.15rem; letter-spacing: -0.01em; }
+  h3.sec:first-of-type { margin-top: 0; }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <a class="brand" href="/"><img src="/icons/logo.png" alt="" width="38" height="38"><span>Alena <span class="tag host">Host</span></span></a>
+    <div class="actions" style="align-items:center">
+      <span class="tiny" id="whoami"></span>
+      <button class="btn btn-quiet btn-sm" id="pwBtn" hidden>Passwort ändern</button>
+      <button class="btn btn-quiet btn-sm" id="logoutBtn" hidden>Abmelden</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap" style="padding-block:2.5rem 3rem">
+
+  <!-- --------------------------------------------- Ersteinrichtung -->
+  <section id="setup" hidden style="padding:0">
+    <div class="sheet" style="max-width:460px;margin:3rem auto">
+      <h2>Erste Einrichtung</h2>
+      <p class="sub">Es besteht noch kein Konto. Lege hier das Host-Konto an – das geht nur ein einziges Mal.</p>
+      <div class="msg" id="setupMsg" role="alert"></div>
+      <form id="setupForm">
+        <div class="field">
+          <label for="sToken">Setup-Token</label>
+          <input type="password" id="sToken" required autocomplete="off">
+          <p class="tiny" style="margin:0.4rem 0 0">Der Wert, den du in Vercel als <code>SETUP_TOKEN</code> hinterlegt hast.</p>
+        </div>
+        <div class="field">
+          <label for="sUser">Benutzername</label>
+          <input type="text" id="sUser" value="host" autocapitalize="none" spellcheck="false" required
+                 pattern="[a-zA-Z0-9._-]{3,}">
+        </div>
+        <div class="field">
+          <label for="sName">Anzeigename</label>
+          <input type="text" id="sName" value="Kamande Njihia">
+        </div>
+        <div class="field">
+          <label for="sPass">Passwort (min. 10 Zeichen)</label>
+          <input type="text" id="sPass" required minlength="10">
+        </div>
+        <button class="btn btn-primary btn-block" type="submit">Host-Konto anlegen</button>
+      </form>
+      <div class="dialog-foot"><a class="tiny" href="/">← Zur Startseite</a></div>
+    </div>
+  </section>
+
+  <!-- ------------------------------------------------------ Anmeldung -->
+  <section id="gate" hidden style="padding:0">
+    <div class="sheet" style="max-width:420px;margin:4rem auto">
+      <h2>Host-Bereich</h2>
+      <p class="sub">Dieser Bereich ist nur für die Verwaltung.</p>
+      <div class="msg error" id="gateMsg" role="alert"></div>
+      <form id="gateForm">
+        <div class="field">
+          <label for="gu">Benutzername</label>
+          <input type="text" id="gu" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+        </div>
+        <div class="field">
+          <label for="gp">Passwort</label>
+          <input type="password" id="gp" autocomplete="current-password" required>
+        </div>
+        <button class="btn btn-primary btn-block" type="submit">Anmelden</button>
+      </form>
+      <p class="tiny" id="gateHint" style="margin:1rem 0 0"></p>
+      <div class="dialog-foot"><a class="tiny" href="/">← Zur Startseite</a></div>
+    </div>
+  </section>
+
+  <!-- ------------------------------------------------------- Konsole -->
+  <section id="console" hidden style="padding:0">
+    <div class="section-head">
+      <div class="eyebrow">Verwaltung</div>
+      <h2>Anfragen, Zugänge und Apps</h2>
+      <p>Registrierungen beantworten, Logins anlegen und einzelne Apps pro Person freischalten.</p>
+    </div>
+
+    <div class="msg" id="topMsg" role="status"></div>
+
+    <div class="layout">
+      <div>
+        <h3 class="sec">Registrierungsanfragen <span class="tiny" id="reqCount"></span></h3>
+        <div class="reqlist" id="reqlist"></div>
+
+        <h3 class="sec">Zugänge</h3>
+        <div class="userlist" id="userlist"></div>
+      </div>
+
+      <aside style="display:grid;gap:1.2rem">
+
+      <div class="panel">
+        <h3 style="margin:0 0 0.2rem;font-size:1.1rem">Erinnerungsdienst</h3>
+        <p class="tiny" style="margin:0 0 1rem">
+          Ohne Taktgeber verschickt Alena keine täglichen Fragen.
+        </p>
+        <div id="schedState" class="stack"></div>
+      </div>
+
+      <div class="panel">
+        <h3 style="margin:0 0 0.2rem;font-size:1.1rem">Neues Login</h3>
+        <p class="tiny" style="margin:0 0 1.2rem">Das Passwort einmalig weitergeben – gespeichert wird es nur verschlüsselt.</p>
+        <form id="newForm">
+          <div class="field">
+            <label for="nUser">Benutzername</label>
+            <input type="text" id="nUser" autocapitalize="none" spellcheck="false" required
+                   pattern="[a-zA-Z0-9._-]{3,}" title="Mindestens 3 Zeichen: a–z, 0–9, . _ -">
+          </div>
+          <div class="field">
+            <label for="nName">Anzeigename</label>
+            <input type="text" id="nName" placeholder="z.B. Anna Muster">
+          </div>
+          <div class="field">
+            <label for="nPass">Passwort (min. 10 Zeichen)</label>
+            <input type="text" id="nPass" required minlength="10">
+            <button class="btn btn-quiet btn-sm" type="button" id="genPass" style="margin-top:0.5rem">Passwort erzeugen</button>
+          </div>
+          <div class="field">
+            <label for="nRole">Rolle</label>
+            <select id="nRole">
+              <option value="user">Benutzer</option>
+              <option value="host">Host (Verwaltung)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Freigeschaltete Apps</label>
+            <div class="modrow" id="newModules" style="margin-top:0;padding-top:0;border-top:none"></div>
+            <div style="margin-top:0.6rem;display:flex;gap:0.4rem">
+              <button class="btn btn-quiet btn-sm" type="button" data-all="1">Alle</button>
+              <button class="btn btn-quiet btn-sm" type="button" data-all="0">Keine</button>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-block" type="submit">Login anlegen</button>
+        </form>
+      </div>
+
+      </aside>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-bottom" style="margin-top:0;border-top:none">
+      <a class="tiny" href="/">← Startseite</a>
+      <div class="theme-switch" role="group" aria-label="Darstellung">
+        <button type="button" data-theme-btn="dark" aria-pressed="true">Dunkel</button>
+        <button type="button" data-theme-btn="light" aria-pressed="false">Hell</button>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="/ambient.js" defer></script>
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const gate = $('gate'), konsole = $('console');
+  let MODULES = [];
+
+  const api = async (url, options = {}) => {
+    const res = await fetch(url, {
+      headers: { 'content-type': 'application/json' },
+      ...options,
+      body: options.body ? JSON.stringify(options.body) : undefined,
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || 'Es ist ein Fehler aufgetreten.');
+    return data;
+  };
+
+  const flash = (text, kind = 'ok') => {
+    const el = $('topMsg');
+    el.textContent = text;
+    el.className = `msg ${kind} show`;
+    el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    setTimeout(() => el.classList.remove('show'), 9000);
+  };
+
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  const when = (iso) => {
+    try { return new Date(iso).toLocaleString('de-CH', { dateStyle: 'medium', timeStyle: 'short' }); }
+    catch { return ''; }
+  };
+
+  /* --------------------------------------------------- Ersteinrichtung */
+  $('setupForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const msg = $('setupMsg');
+    msg.className = 'msg';
+    try {
+      await api('/api/setup', {
+        method: 'POST',
+        body: {
+          token: $('sToken').value,
+          username: $('sUser').value,
+          name: $('sName').value,
+          password: $('sPass').value,
+        },
+      });
+      const data = await api('/api/auth?do=login', {
+        method: 'POST',
+        body: { username: $('sUser').value, password: $('sPass').value },
+      });
+      if (data.user.role === 'host') return location.reload();
+    } catch (err) {
+      msg.textContent = err.message;
+      msg.className = 'msg error show';
+    }
+  });
+
+  /* ------------------------------------------------------- Anmeldung */
+  $('gateForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const msg = $('gateMsg');
+    msg.classList.remove('show');
+    try {
+      const data = await api('/api/auth?do=login', {
+        method: 'POST',
+        body: { username: $('gu').value, password: $('gp').value },
+      });
+      if (data.user.role !== 'host') throw new Error('Dieses Konto hat keinen Host-Zugang.');
+      location.reload();
+    } catch (err) {
+      msg.textContent = err.message;
+      msg.classList.add('show');
+      $('gp').value = '';
+    }
+  });
+
+  $('logoutBtn').addEventListener('click', async () => {
+    await api('/api/auth?do=logout', { method: 'POST' }).catch(() => {});
+    location.href = '/';
+  });
+
+  $('pwBtn').addEventListener('click', async () => {
+    const current = prompt('Aktuelles Passwort:');
+    if (!current) return;
+    const next = prompt('Neues Passwort (min. 10 Zeichen):');
+    if (!next) return;
+    try {
+      await api('/api/auth?do=password', { method: 'POST', body: { current, next } });
+      flash('Passwort geändert. Alle anderen Geräte wurden abgemeldet.');
+    } catch (err) { flash(err.message, 'error'); }
+  });
+
+  /* -------------------------------------------------------- Anfragen */
+  function renderRequests(requests) {
+    const list = $('reqlist');
+    const open = requests.filter((r) => r.status !== 'erledigt').length;
+    $('reqCount').textContent = open ? `· ${open} offen` : '';
+    if (!requests.length) {
+      list.innerHTML = '<div class="empty">Keine Anfragen.</div>';
+      return;
+    }
+    list.innerHTML = '';
+    for (const r of requests) {
+      const el = document.createElement('div');
+      el.className = 'req' + (r.status === 'erledigt' ? ' done' : '');
+      const subject = encodeURIComponent('Dein Zugang zu Alena');
+      const body = encodeURIComponent(
+        `Hallo ${r.name}\n\nDanke für dein Interesse an Alena.\n\n`
+      );
+      el.innerHTML = `
+        <div class="user-head">
+          <div class="who">
+            <div class="avatar">${esc((r.name || '?').slice(0, 2).toUpperCase())}</div>
+            <div>
+              <b>${esc(r.name)} ${r.status === 'erledigt' ? '' : '<span class="tag neu">Neu</span>'}</b>
+              <small><a href="mailto:${esc(r.email)}">${esc(r.email)}</a> · ${esc(when(r.createdAt))}</small>
+            </div>
+          </div>
+          <div class="actions">
+            <a class="btn btn-primary btn-sm" href="mailto:${esc(r.email)}?subject=${subject}&body=${body}">Antworten</a>
+            <button class="btn btn-quiet btn-sm" data-req="fill">Login anlegen</button>
+            <button class="btn btn-quiet btn-sm" data-req="toggle">${r.status === 'erledigt' ? 'Wieder öffnen' : 'Erledigt'}</button>
+            <button class="btn btn-quiet btn-sm" data-req="delete">Löschen</button>
+          </div>
+        </div>
+        ${r.note ? `<p class="note">${esc(r.note)}</p>` : ''}`;
+
+      el.querySelector('[data-req="fill"]').addEventListener('click', () => {
+        const base = (r.email.split('@')[0] || r.name).toLowerCase().replace(/[^a-z0-9._-]/g, '');
+        $('nUser').value = base;
+        $('nName').value = r.name;
+        $('nPass').value = randomPass();
+        $('nUser').scrollIntoView({ block: 'center', behavior: 'smooth' });
+        $('nUser').focus();
+      });
+      el.querySelector('[data-req="toggle"]').addEventListener('click', async () => {
+        try {
+          await api('/api/admin?bereich=requests', {
+            method: 'PATCH',
+            body: { id: r.id, status: r.status === 'erledigt' ? 'neu' : 'erledigt' },
+          });
+          await load();
+        } catch (err) { flash(err.message, 'error'); }
+      });
+      el.querySelector('[data-req="delete"]').addEventListener('click', async () => {
+        if (!confirm(`Anfrage von „${r.name}“ löschen?`)) return;
+        try {
+          await api(`/api/admin?bereich=requests&id=${encodeURIComponent(r.id)}`, { method: 'DELETE' });
+          await load();
+        } catch (err) { flash(err.message, 'error'); }
+      });
+      list.appendChild(el);
+    }
+  }
+
+  /* ---------------------------------------------------- Benutzerliste */
+  const initials = (u) => (u.name || u.username).trim().slice(0, 2).toUpperCase();
+
+  function renderUsers(users) {
+    const list = $('userlist');
+    if (!users.length) {
+      list.innerHTML = '<div class="empty">Noch keine Logins angelegt.</div>';
+      return;
+    }
+    list.innerHTML = '';
+    for (const u of users) {
+      const card = document.createElement('div');
+      card.className = 'user' + (u.active === false ? ' locked' : '');
+      card.innerHTML = `
+        <div class="user-head">
+          <div class="who">
+            <div class="avatar">${esc(initials(u))}</div>
+            <div>
+              <b>${esc(u.name || u.username)}
+                ${u.role === 'host' ? '<span class="tag host">Host</span>' : ''}
+                ${u.active === false ? '<span class="tag locked">Gesperrt</span>' : ''}
+              </b>
+              <small>${esc(u.username)} · ${u.pushDevices || 0} Gerät(e) mit Mitteilungen</small>
+            </div>
+          </div>
+          <div class="actions">
+            <button class="btn btn-quiet btn-sm" data-act="${u.active === false ? 'unlock' : 'lock'}">
+              ${u.active === false ? 'Entsperren' : 'Sperren'}
+            </button>
+            <button class="btn btn-quiet btn-sm" data-act="password">Passwort</button>
+            <button class="btn btn-quiet btn-sm" data-act="signout">Abmelden</button>
+            <button class="btn btn-quiet btn-sm" data-act="delete">Löschen</button>
+          </div>
+        </div>
+        <div class="modrow"></div>`;
+
+      const row = card.querySelector('.modrow');
+      for (const m of MODULES) {
+        const on = Boolean(u.modules?.[m.id]);
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'chip';
+        chip.setAttribute('aria-pressed', String(on));
+        chip.innerHTML = `<span class="dot"></span>${esc(m.icon)} ${esc(m.name)}`;
+        chip.addEventListener('click', async () => {
+          chip.disabled = true;
+          try {
+            await api('/api/admin?bereich=users', {
+              method: 'PATCH',
+              body: { username: u.username, action: 'module', module: m.id, enabled: !on },
+            });
+            await load();
+          } catch (err) { flash(err.message, 'error'); chip.disabled = false; }
+        });
+        row.appendChild(chip);
+      }
+
+      card.querySelectorAll('[data-act]').forEach((btn) => {
+        btn.addEventListener('click', () => act(btn.dataset.act, u));
+      });
+      list.appendChild(card);
+    }
+  }
+
+  async function act(action, u) {
+    try {
+      if (action === 'delete') {
+        if (!confirm(`Konto „${u.username}“ endgültig löschen?`)) return;
+        await api(`/api/admin?bereich=users&username=${encodeURIComponent(u.username)}`, { method: 'DELETE' });
+        flash('Konto gelöscht.');
+      } else if (action === 'password') {
+        const pw = prompt(`Neues Passwort für „${u.username}“ (min. 10 Zeichen):`, randomPass());
+        if (!pw) return;
+        await api('/api/admin?bereich=users', { method: 'PATCH', body: { username: u.username, action: 'password', password: pw } });
+        flash(`Neues Passwort für ${u.username}: ${pw}`);
+      } else {
+        await api('/api/admin?bereich=users', { method: 'PATCH', body: { username: u.username, action } });
+        flash('Gespeichert.');
+      }
+      await load();
+    } catch (err) {
+      flash(err.message, 'error');
+    }
+  }
+
+  /* ------------------------------------------------------ Neues Login */
+  const randomPass = () => {
+    const abc = 'abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    return Array.from(crypto.getRandomValues(new Uint32Array(14)), (n) => abc[n % abc.length]).join('');
+  };
+  $('genPass').addEventListener('click', () => { $('nPass').value = randomPass(); });
+
+  /* Auswahl der Apps für das neue Konto */
+  function renderNewModules() {
+    const row = $('newModules');
+    row.innerHTML = '';
+    for (const m of MODULES) {
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'chip';
+      chip.dataset.mod = m.id;
+      chip.setAttribute('aria-pressed', 'true');
+      chip.innerHTML = `<span class="dot"></span>${esc(m.icon)} ${esc(m.name)}`;
+      chip.addEventListener('click', () => {
+        chip.setAttribute('aria-pressed', chip.getAttribute('aria-pressed') === 'true' ? 'false' : 'true');
+      });
+      row.appendChild(chip);
+    }
+  }
+  document.querySelectorAll('[data-all]').forEach((btn) =>
+    btn.addEventListener('click', () => {
+      $('newModules').querySelectorAll('.chip')
+        .forEach((c) => c.setAttribute('aria-pressed', btn.dataset.all === '1' ? 'true' : 'false'));
+    })
+  );
+  const chosenModules = () => {
+    const out = {};
+    $('newModules').querySelectorAll('.chip')
+      .forEach((c) => { out[c.dataset.mod] = c.getAttribute('aria-pressed') === 'true'; });
+    return out;
+  };
+
+  $('newForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    try {
+      const user = $('nUser').value, pass = $('nPass').value;
+      await api('/api/admin?bereich=users', {
+        method: 'POST',
+        body: {
+          username: user, name: $('nName').value, password: pass,
+          role: $('nRole').value, modules: chosenModules(),
+        },
+      });
+      flash(`Login „${user}“ angelegt. Passwort: ${pass}`);
+      e.target.reset();
+      await load();
+    } catch (err) {
+      flash(err.message, 'error');
+    }
+  });
+
+  /* ------------------------------------------------- Erinnerungsdienst */
+  async function renderSchedule() {
+    const box = $('schedState');
+    let s;
+    try { s = await api('/api/admin?bereich=schedule'); }
+    catch (err) { box.innerHTML = `<p class="tiny" style="margin:0">${esc(err.message)}</p>`; return; }
+
+    if (!s.qstash) {
+      box.innerHTML = `
+        <p class="tiny" style="margin:0 0 0.8rem">${esc(s.hinweis)}</p>
+        <a class="btn btn-quiet btn-sm" href="https://vercel.com/marketplace/upstash/upstash-qstash"
+           target="_blank" rel="noopener">QStash in Vercel verbinden</a>`;
+      return;
+    }
+
+    if (s.plaene.length) {
+      box.innerHTML = s.plaene.map((p) => `
+        <div class="stat">
+          <b style="font-size:1.1rem">Läuft</b>
+          <span>Prüfung alle 15 Minuten · <code>${esc(p.cron)}</code></span>
+        </div>`).join('')
+        + `<div class="opts" style="margin-top:0.8rem">
+             <button class="btn btn-quiet btn-sm" data-sched="neu">Neu einrichten</button>
+             <button class="btn btn-quiet btn-sm" data-sched="weg">Anhalten</button>
+           </div>`;
+    } else {
+      box.innerHTML = `
+        ${s.hinweis ? `<p class="tiny" style="margin:0 0 0.8rem">${esc(s.hinweis)}</p>` : ''}
+        <p class="tiny" style="margin:0 0 0.8rem">Noch kein Zeitplan angelegt.</p>
+        <button class="btn btn-primary btn-sm" data-sched="neu">Zeitplan einrichten</button>`;
+    }
+
+    box.querySelectorAll('[data-sched]').forEach((btn) =>
+      btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        try {
+          if (btn.dataset.sched === 'neu') {
+            const r = await api('/api/admin?bereich=schedule', { method: 'POST' });
+            flash(`Zeitplan eingerichtet – Alena prüft ab jetzt alle 15 Minuten (${r.ziel}).`);
+          } else {
+            for (const p of s.plaene) {
+              await api(`/api/admin?bereich=schedule&id=${encodeURIComponent(p.id)}`, { method: 'DELETE' });
+            }
+            flash('Zeitplan angehalten. Es werden keine Erinnerungen mehr verschickt.');
+          }
+          await renderSchedule();
+        } catch (err) { flash(err.message, 'error'); btn.disabled = false; }
+      })
+    );
+  }
+
+  /* ------------------------------------------------------------ Start */
+  async function load() {
+    const [users, requests] = await Promise.all([
+      api('/api/admin?bereich=users'),
+      api('/api/admin?bereich=requests').catch(() => ({ requests: [] })),
+    ]);
+    MODULES = users.modules;
+    renderNewModules();
+    renderRequests(requests.requests || []);
+    renderUsers(users.users);
+  }
+
+  (async () => {
+    const me = await api('/api/auth?do=me').catch((err) => ({ user: null, err: err.message }));
+
+    if (!me.user || me.user.role !== 'host') {
+      // Woran hakt es? Der Statusbericht sagt es.
+      const status = await api('/api/status').catch(() => null);
+
+      if (status?.setupMoeglich) {
+        $('setup').hidden = false;
+        return;
+      }
+      gate.hidden = false;
+      if (!status) {
+        $('gateHint').textContent = me.err
+          || 'Der Server antwortet nicht. Ist Upstash for Redis im Vercel-Projekt verbunden?';
+      } else if (status.konten === 0) {
+        $('gateHint').textContent =
+          'Es besteht noch kein Konto. Setze SETUP_TOKEN in Vercel, deploye einmal neu, '
+          + 'dann erscheint hier das Formular für die Ersteinrichtung.';
+      } else if (me.user) {
+        $('gateHint').textContent = 'Dieses Konto ist angemeldet, hat aber keine Host-Rolle.';
+      }
+      return;
+    }
+    $('whoami').textContent = me.user.name || me.user.username;
+    $('pwBtn').hidden = false;
+    $('logoutBtn').hidden = false;
+    konsole.hidden = false;
+    try { await load(); } catch (err) { flash(err.message, 'error'); }
+    renderSchedule();
+  })();
+})();
+</script>
+</body>
+</html>
