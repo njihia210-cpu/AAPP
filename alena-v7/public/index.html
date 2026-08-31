@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="de" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Alena – deine App für alles</title>
+<meta name="description" content="Alena bündelt To-Dos, Kalender, Medikamententracker, Periodentracker, Lernatelier, Ziele und ein eigenes Rezeptbuch – mit verlässlichen Erinnerungen auf dem Handy.">
+<meta name="theme-color" content="#0d0a22">
+
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/favicon.png" sizes="32x32">
+<link rel="icon" href="/icons/favicon-96.png" sizes="96x96">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Alena">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+
+<meta property="og:title" content="Alena – deine App für alles">
+<meta property="og:description" content="To-Dos, Kalender, Medikamente, Zyklus, Lernen, Ziele und Rezepte – in einer App.">
+<meta property="og:image" content="/icons/icon-512.png">
+<meta property="og:type" content="website">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="/styles.css">
+<script src="/theme.js"></script>
+</head>
+<body>
+
+<header class="topbar" id="topbar">
+  <div class="wrap topbar-inner">
+    <a class="brand" href="/">
+      <img src="/icons/logo.png" alt="" width="38" height="38">
+      <span>Alena</span>
+    </a>
+    <nav class="nav-links" aria-label="Bereiche">
+      <a href="#apps">Apps</a>
+      <a href="#erinnerungen">Erinnerungen</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <div style="display:flex;gap:0.5rem">
+      <button class="btn btn-ghost btn-sm" data-open-register>Registrieren</button>
+      <button class="btn btn-primary btn-sm" data-open-login>Anmelden</button>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- ------------------------------------------------------------ Hero -->
+  <div class="wrap hero">
+    <img class="hero-logo" src="/icons/logo.png" alt="Alena Logo" width="190" height="190">
+    <div class="pill">Eine App für alles</div>
+    <h1>Alena</h1>
+    <p class="tagline">Lernen, Alltag und Wohlbefinden – an einem ruhigen Ort.</p>
+    <p class="lede">
+      Statt sieben Apps für sieben Dinge: Alena bündelt Aufgaben, Termine,
+      Medikamente, Zyklus, Lernen, Ziele und deine eigenen Rezepte.
+      Auf dem Handy wie ein Programm, auf dem Computer im Browser –
+      und die Erinnerungen kommen verlässlich an.
+    </p>
+    <div class="hero-actions">
+      <button class="btn btn-primary" data-open-login>Anmelden</button>
+      <button class="btn btn-ghost" data-open-register>Zugang anfragen</button>
+    </div>
+    <div class="ios-hint" id="iosHint">
+      <strong>Tipp fürs iPhone:</strong> Tippe unten auf <em>Teilen</em> und dann auf
+      <em>„Zum Home-Bildschirm“</em>. Danach startet Alena wie eine richtige App –
+      und erst dann kann sie dir Mitteilungen senden.
+    </div>
+  </div>
+
+  <!-- ------------------------------------------------------------ Apps -->
+  <section id="apps">
+    <div class="wrap">
+      <div class="section-head center">
+        <div class="eyebrow">Die Apps</div>
+        <h2>Alles Wichtige, sauber getrennt</h2>
+        <p>Jede App lässt sich einzeln freischalten. Du siehst nur das, was du wirklich brauchst.</p>
+      </div>
+      <div class="grid">
+        <article class="card"><div class="icon">✓</div><h3>To-Dos</h3>
+          <p>Aufgaben, Projekte und Fälligkeiten an einem Ort – mit Erinnerung, bevor es knapp wird.</p>
+          <span class="badge">Kommt bald</span></article>
+        <article class="card"><div class="icon">📅</div><h3>Kalender</h3>
+          <p>Termine und Fristen im Überblick, direkt mit den To-Dos verbunden.</p>
+          <span class="badge">Kommt bald</span></article>
+        <article class="card"><div class="icon">💊</div><h3>Medikamententracker</h3>
+          <p>Einnahmezeiten hinterlegen und pünktlich erinnert werden, auch wenn die App geschlossen ist.</p>
+          <span class="badge">Kommt bald</span></article>
+        <article class="card"><div class="icon">🌙</div><h3>Periodentracker</h3>
+          <p>Zyklus verfolgen, Muster erkennen und vorbereitet sein – diskret und nur für dich.</p>
+          <span class="badge">Kommt bald</span></article>
+        <article class="card"><div class="icon">📚</div><h3>Lernatelier</h3>
+          <p>Karteikarten, Lernpläne und Prüfungstermine. Alena erinnert dich rechtzeitig ans Wiederholen.</p>
+          <span class="badge">Kommt bald</span></article>
+        <article class="card"><div class="icon">◎</div><h3>Ziele</h3>
+          <p>Grosse Vorhaben in kleine Schritte teilen und Woche für Woche sehen, was vorwärts geht.</p>
+          <span class="badge">Kommt bald</span></article>
+        <article class="card"><div class="icon">🍲</div><h3>Rezeptbuch</h3>
+          <p>Eigene Rezepte erfassen: Zutaten und Arbeitsschritte. Beim Kochen führt dich Alena Schritt für Schritt durch.</p>
+          <span class="badge">Kommt bald</span></article>
+      </div>
+    </div>
+  </section>
+
+  <!-- --------------------------------------------------- Erinnerungen -->
+  <section id="erinnerungen">
+    <div class="wrap">
+      <div class="feature">
+        <div>
+          <div class="eyebrow">Erinnerungen</div>
+          <h2>Mitteilungen, die wirklich ankommen</h2>
+          <p style="color:var(--text-soft);margin:0">
+            Alena schickt echte Push-Mitteilungen – auch dann, wenn die App komplett
+            geschlossen ist. Auf dem iPhone braucht es dafür einen kurzen Schritt:
+          </p>
+          <ol class="steps">
+            <li><span class="n">1</span><span>Alena in <strong>Safari</strong> öffnen (nicht in Chrome oder in einer anderen App).</span></li>
+            <li><span class="n">2</span><span>Auf <strong>Teilen</strong> tippen und <strong>„Zum Home-Bildschirm“</strong> wählen.</span></li>
+            <li><span class="n">3</span><span>Alena über das neue Symbol starten und die Mitteilungen erlauben.</span></li>
+          </ol>
+          <p class="tiny" style="margin-top:1.2rem">
+            Auf Android, Windows und Mac genügt es, Alena im Browser zu öffnen und die
+            Mitteilungen zu erlauben.
+          </p>
+        </div>
+        <div class="phone" aria-hidden="true">
+          <div class="phone-screen">
+            <div class="phone-clock"><b>08:00</b><span>Montag, 7. September</span></div>
+            <div class="notif"><img src="/icons/icon-192.png" alt=""><div><b>Alena</b><span>08:00 – Vitamin D nicht vergessen.</span></div></div>
+            <div class="notif"><img src="/icons/icon-192.png" alt=""><div><b>Alena</b><span>Französisch: 12 Karten warten auf dich.</span></div></div>
+            <div class="notif"><img src="/icons/icon-192.png" alt=""><div><b>Alena</b><span>Znacht: Linsencurry – 6 Schritte 🍲</span></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ------------------------------------------------------------- FAQ -->
+  <section id="faq">
+    <div class="wrap">
+      <div class="section-head center">
+        <div class="eyebrow">Fragen</div>
+        <h2>Häufige Fragen</h2>
+      </div>
+      <div class="faq">
+        <details>
+          <summary>Muss ich Alena aus einem App-Store installieren?</summary>
+          <p>Nein. Alena läuft im Browser und lässt sich auf dem Handy zum Home-Bildschirm hinzufügen. Danach startet sie im Vollbild wie eine gewöhnliche App – ohne Store und ohne Update-Zwang.</p>
+        </details>
+        <details>
+          <summary>Funktionieren Mitteilungen auf dem iPhone?</summary>
+          <p>Ja, ab iOS 16.4 – allerdings nur, wenn Alena vorher über Safari zum Home-Bildschirm hinzugefügt wurde und aus diesem Symbol heraus gestartet wird. In einem normalen Safari-Tab lässt Apple keine Web-Mitteilungen zu.</p>
+        </details>
+        <details>
+          <summary>Kann ich Alena auch am Computer nutzen?</summary>
+          <p>Ja. Dieselbe Adresse funktioniert auf Windows, Mac und Linux in jedem modernen Browser. Handy und Computer sehen jeweils denselben Stand.</p>
+        </details>
+        <details>
+          <summary>Wie bekomme ich einen Zugang?</summary>
+          <p>Über <em>Registrieren</em> Name und E-Mail hinterlassen. Die Anfrage landet direkt beim Betreiber, der sich danach persönlich per Mail meldet und den Zugang einrichtet. Eine offene Selbstregistrierung gibt es bewusst nicht.</p>
+        </details>
+        <details>
+          <summary>Wann sind die einzelnen Apps fertig?</summary>
+          <p>Alle sieben Bereiche stehen aktuell auf „Kommt bald“ und werden einer nach dem anderen freigeschaltet. Wer einen Zugang hat, sieht die neuen Apps automatisch, sobald sie bereit sind.</p>
+        </details>
+        <details>
+          <summary>Was passiert mit meinen Daten?</summary>
+          <p>Die Daten liegen auf einem Server in Europa und sind an dein Konto gebunden. Andere Benutzerinnen und Benutzer sehen sie nicht. Details stehen im Datenschutzhinweis.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- ------------------------------------------------- Recht (Kurzform) -->
+  <section id="impressum">
+    <div class="wrap">
+      <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr))">
+        <article class="card">
+          <h3>Impressum</h3>
+          <p>
+            Alena<br>
+            Betreiber: Kamande Njihia<br>
+            Holzlegistrasse 15a<br>
+            8408 Winterthur, Schweiz<br>
+            <a href="mailto:amplifyxswiss@gmail.com">amplifyxswiss@gmail.com</a>
+          </p>
+        </article>
+        <article class="card" id="datenschutz">
+          <h3>Datenschutz</h3>
+          <p>
+            Alena speichert nur, was für den Betrieb nötig ist: Benutzername, ein
+            verschlüsselt abgelegtes Passwort, deine Einträge in den Apps und –
+            falls du Mitteilungen erlaubst – die technische Adresse deines Geräts.
+            Bei einer Registrierungsanfrage werden zusätzlich Name und E-Mail-Adresse
+            gespeichert, um dir antworten zu können. Es gibt keine Werbung und keine
+            Weitergabe an Dritte. Auskunft und Löschung jederzeit über
+            <a href="mailto:amplifyxswiss@gmail.com">amplifyxswiss@gmail.com</a>.
+          </p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ----------------------------------------------------------- Fusszeile -->
+<footer>
+  <div class="wrap">
+    <div class="foot-top">
+      <a class="brand" href="/"><img src="/icons/logo.png" alt="" width="34" height="34"><span>Alena</span></a>
+      <nav class="foot-links" aria-label="Rechtliches">
+        <a href="#faq">FAQ</a>
+        <a href="#impressum">Impressum</a>
+        <a href="#datenschutz">Datenschutz</a>
+        <a href="mailto:amplifyxswiss@gmail.com">Kontakt</a>
+      </nav>
+    </div>
+    <div class="foot-bottom">
+      <span>© <span id="year">2026</span> Kamande Njihia · Winterthur</span>
+      <div class="foot-tools">
+        <div class="theme-switch" role="group" aria-label="Darstellung">
+          <button type="button" data-theme-btn="dark" aria-pressed="true">Dunkel</button>
+          <button type="button" data-theme-btn="light" aria-pressed="false">Hell</button>
+        </div>
+        <a class="host-link" href="/host" rel="nofollow">Host</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- -------------------------------------------------------- Login-Dialog -->
+<dialog id="loginDialog" aria-labelledby="loginTitle">
+  <form class="sheet" id="loginForm">
+    <h2 id="loginTitle">Willkommen zurück</h2>
+    <p class="sub">Melde dich mit deinem Alena-Konto an.</p>
+
+    <div class="msg error" id="loginMsg" role="alert"></div>
+
+    <div class="field">
+      <label for="username">Benutzername</label>
+      <input type="text" id="username" name="username" autocomplete="username"
+             autocapitalize="none" spellcheck="false" required>
+    </div>
+    <div class="field">
+      <label for="password">Passwort</label>
+      <input type="password" id="password" name="password" autocomplete="current-password" required>
+    </div>
+
+    <label class="merker" for="bleiben">
+      <input type="checkbox" id="bleiben" name="bleiben">
+      <span>Angemeldet bleiben</span>
+    </label>
+
+    <button class="btn btn-primary btn-block" type="submit" id="loginSubmit">Anmelden</button>
+
+    <div class="dialog-foot">
+      <button class="btn btn-quiet btn-sm" type="button" data-open-register data-close-first>Zugang anfragen</button>
+      <button class="btn btn-quiet btn-sm" type="button" data-close-dialog>Schliessen</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- -------------------------------------------------- Registrier-Dialog -->
+<dialog id="registerDialog" aria-labelledby="regTitle">
+  <form class="sheet" id="registerForm">
+    <h2 id="regTitle">Zugang anfragen</h2>
+    <p class="sub">Der Betreiber meldet sich persönlich per E-Mail bei dir.</p>
+
+    <div class="msg" id="regMsg" role="alert"></div>
+
+    <div id="regFields">
+      <div class="field">
+        <label for="regName">Vollständiger Name</label>
+        <input type="text" id="regName" name="name" autocomplete="name" required minlength="3">
+      </div>
+      <div class="field">
+        <label for="regMail">E-Mail-Adresse</label>
+        <input type="email" id="regMail" name="email" autocomplete="email" required>
+      </div>
+      <div class="field">
+        <label for="regNote">Nachricht <span class="tiny">(optional)</span></label>
+        <textarea id="regNote" name="note" placeholder="Wofür möchtest du Alena nutzen?"></textarea>
+      </div>
+      <button class="btn btn-primary btn-block" type="submit" id="regSubmit">Anfrage senden</button>
+    </div>
+
+    <div class="dialog-foot">
+      <span class="tiny">Nur Name und E-Mail werden gespeichert.</span>
+      <button class="btn btn-quiet btn-sm" type="button" data-close-dialog>Schliessen</button>
+    </div>
+  </form>
+</dialog>
+
+<script src="/ambient.js" defer></script>
+<script>
+(() => {
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  /* Kopfzeile beim Scrollen abtrennen */
+  const topbar = document.getElementById('topbar');
+  const onScroll = () => topbar.classList.toggle('scrolled', window.scrollY > 8);
+  addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+
+  /* iOS-Hinweis nur auf iPhone/iPad im Browser-Tab zeigen */
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+    || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  if (isIOS && !standalone) document.getElementById('iosHint').classList.add('show');
+
+  /* -------------------------------------------------------- Dialoge */
+  const loginDlg = document.getElementById('loginDialog');
+  const regDlg = document.getElementById('registerDialog');
+
+  const say = (el, text, kind) => {
+    el.textContent = text;
+    el.className = `msg ${kind} show`;
+  };
+  const hush = (el) => { el.textContent = ''; el.className = 'msg'; };
+
+  document.querySelectorAll('[data-open-login]').forEach((b) =>
+    b.addEventListener('click', () => {
+      hush(document.getElementById('loginMsg'));
+      loginDlg.showModal();
+      document.getElementById('username').focus();
+    })
+  );
+  document.querySelectorAll('[data-open-register]').forEach((b) =>
+    b.addEventListener('click', () => {
+      if (b.hasAttribute('data-close-first')) loginDlg.close();
+      hush(document.getElementById('regMsg'));
+      regDlg.showModal();
+      document.getElementById('regName').focus();
+    })
+  );
+  document.querySelectorAll('[data-close-dialog]').forEach((b) =>
+    b.addEventListener('click', () => b.closest('dialog').close())
+  );
+
+  /* ---------------------------------------------------------- Login */
+  const loginForm = document.getElementById('loginForm');
+  const loginMsg = document.getElementById('loginMsg');
+  const loginSubmit = document.getElementById('loginSubmit');
+
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    hush(loginMsg);
+    loginSubmit.disabled = true;
+    loginSubmit.textContent = 'Einen Moment …';
+    try {
+      const res = await fetch('/api/auth?do=login', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          username: loginForm.username.value,
+          password: loginForm.password.value,
+          bleiben: loginForm.bleiben.checked,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Anmeldung fehlgeschlagen.');
+      location.href = data.user?.role === 'host' ? '/host' : '/app';
+    } catch (err) {
+      say(loginMsg, err.message, 'error');
+      loginSubmit.disabled = false;
+      loginSubmit.textContent = 'Anmelden';
+      loginForm.password.value = '';
+      loginForm.password.focus();
+    }
+  });
+
+  /* --------------------------------------------------- Registrierung */
+  const regForm = document.getElementById('registerForm');
+  const regMsg = document.getElementById('regMsg');
+  const regSubmit = document.getElementById('regSubmit');
+
+  regForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    hush(regMsg);
+    regSubmit.disabled = true;
+    regSubmit.textContent = 'Wird gesendet …';
+    try {
+      const res = await fetch('/api/register', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          name: regForm.name.value,
+          email: regForm.email.value,
+          note: regForm.note.value,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Senden fehlgeschlagen.');
+      document.getElementById('regFields').hidden = true;
+      say(regMsg, 'Danke – die Anfrage ist angekommen. Du hörst per E-Mail von uns.', 'ok');
+    } catch (err) {
+      say(regMsg, err.message, 'error');
+      regSubmit.disabled = false;
+      regSubmit.textContent = 'Anfrage senden';
+    }
+  });
+
+  /* Service Worker für App-Verhalten und Mitteilungen */
+  if ('serviceWorker' in navigator) {
+    addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
+  }
+})();
+</script>
+</body>
+</html>
