@@ -1,0 +1,469 @@
+<!doctype html>
+<html lang="de" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Einstellungen – Alena</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0d0a22">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/favicon.png" sizes="32x32">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Alena">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="/styles.css">
+<script src="/theme.js"></script>
+<style>
+  .cols { display: grid; gap: 1.2rem; grid-template-columns: 240px minmax(0, 1fr); align-items: start; }
+  @media (max-width: 860px) { .cols { grid-template-columns: 1fr; } }
+
+  .seitennav { position: sticky; top: 5rem; display: grid; gap: 0.3rem; }
+  @media (max-width: 860px) { .seitennav { position: static; grid-auto-flow: column; overflow-x: auto; } }
+  .seitennav a {
+    padding: 0.6rem 0.9rem; border-radius: 12px; font-size: 0.92rem; color: var(--text-soft);
+    border: 1px solid transparent; white-space: nowrap;
+  }
+  .seitennav a:hover { background: var(--surface); color: var(--text); }
+
+  .block { margin-bottom: 1.2rem; }
+  .block h3 { margin: 0 0 0.2rem; font-size: 1.15rem; letter-spacing: -0.015em; }
+  .block > p.tiny { margin: 0 0 1.3rem; }
+
+  .schalter {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 1rem; padding: 0.9rem 0;
+  }
+  .schalter + .schalter { border-top: 1px solid var(--line-soft); }
+  .schalter strong { font-weight: 600; font-size: 0.98rem; }
+  .schalter p { margin: 0.2rem 0 0; font-size: 0.83rem; color: var(--text-dim); max-width: 46ch; }
+  .schalter .rechts { display: flex; align-items: center; gap: 0.6rem; flex: none; }
+
+  .knopf {
+    padding: 0.45rem 1rem; border-radius: 999px; cursor: pointer; font: inherit; font-size: 0.85rem;
+    border: 1px solid var(--line); background: var(--input-bg); color: var(--text-dim);
+    transition: all 0.15s ease; min-width: 66px;
+  }
+  .knopf[aria-pressed="true"] { background: var(--accent); border-color: transparent; color: #fff; font-weight: 600; }
+
+  .zeit { width: 116px; }
+
+  .pakete { display: grid; gap: 0.7rem; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+  .paket {
+    display: grid; gap: 0.6rem; padding: 0.9rem; border-radius: var(--radius);
+    border: 1px solid var(--line); background: var(--input-bg); cursor: pointer;
+    font: inherit; text-align: left; color: var(--text); transition: all 0.18s ease;
+  }
+  .paket:hover { border-color: var(--line-strong); }
+  .paket[aria-pressed="true"] { border-color: var(--akzent-1); box-shadow: 0 0 0 2px var(--akzent-1) inset; }
+  .proben { display: flex; gap: 0.35rem; }
+  .proben i { width: 26px; height: 26px; border-radius: 8px; border: 1px solid var(--line); }
+  .paket b { display: block; font-size: 0.95rem; font-weight: 600; }
+  .paket span { font-size: 0.78rem; color: var(--text-dim); }
+
+  .app-block { padding: 1.1rem 0; }
+  .app-block + .app-block { border-top: 1px solid var(--line-soft); }
+  .app-kopf { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.3rem; }
+  .app-kopf .icon { width: 34px; height: 34px; margin: 0; font-size: 1rem; }
+  .app-kopf b { font-size: 1rem; }
+  .app-block.ruht { opacity: 0.55; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
+  @media (max-width: 520px) { .row { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <a class="brand" href="/app"><img src="/icons/logo.png" alt="" width="38" height="38"><span>Alena</span></a>
+    <div style="display:flex;align-items:center;gap:0.7rem">
+      <span class="tiny" id="saveState"></span>
+      <a class="btn btn-quiet btn-sm" href="/app">Zurück</a>
+    </div>
+  </div>
+</header>
+
+<main class="wrap" style="padding-block:2rem 3rem">
+  <div class="section-head" style="margin-bottom:1.6rem">
+    <div class="eyebrow">Einstellungen</div>
+    <h2>Einstellungen</h2>
+    <p id="titel" style="margin:0.4rem 0 0;color:var(--text-soft)"></p>
+  </div>
+
+  <div class="msg" id="msg" role="status"></div>
+
+  <div class="cols">
+    <nav class="seitennav" aria-label="Bereiche">
+      <a href="#benachrichtigungen">Benachrichtigungen</a>
+      <a href="#darstellung">Darstellung</a>
+      <a href="#konto">Konto</a>
+    </nav>
+
+    <div>
+      <!-- ------------------------------------------- Benachrichtigungen -->
+      <section id="benachrichtigungen" style="padding:0">
+        <div class="card block">
+          <h3>Dieses Gerät</h3>
+          <p class="tiny">
+            Mitteilungen müssen auf jedem Gerät einzeln erlaubt werden – Handy und
+            Computer zählen getrennt.
+          </p>
+          <div id="geraet"></div>
+        </div>
+
+        <div class="card block">
+          <h3>Wofür Alena sich meldet</h3>
+          <p class="tiny">
+            Hier stehen nur die Apps, die für dein Konto freigeschaltet sind.
+            Jede bringt ihre eigenen Anlässe mit.
+          </p>
+          <div id="appliste"></div>
+        </div>
+      </section>
+
+      <!-- -------------------------------------------------- Darstellung -->
+      <section id="darstellung" style="padding:0">
+        <div class="card block">
+          <h3>Darstellung</h3>
+          <p class="tiny">Gilt für dieses Gerät und bleibt gespeichert.</p>
+
+          <div class="schalter">
+            <div><strong>Hell oder dunkel</strong><p>Standard ist dunkel.</p></div>
+            <div class="rechts theme-switch" role="group" aria-label="Hell oder dunkel">
+              <button type="button" data-theme-btn="dark">Dunkel</button>
+              <button type="button" data-theme-btn="light">Hell</button>
+            </div>
+          </div>
+
+          <p style="margin:1.4rem 0 0.8rem;font-weight:600;font-size:0.98rem">Farbpaket</p>
+          <div class="pakete" id="pakete"></div>
+        </div>
+      </section>
+
+      <!-- --------------------------------------------------------- Konto -->
+      <section id="konto" style="padding:0">
+        <div class="card block">
+          <h3>Konto</h3>
+          <p class="tiny" id="kontoInfo"></p>
+
+          <div class="row">
+            <div class="field">
+              <label for="pwAlt">Aktuelles Passwort</label>
+              <input type="password" id="pwAlt" autocomplete="current-password">
+            </div>
+            <div class="field">
+              <label for="pwNeu">Neues Passwort (min. 10 Zeichen)</label>
+              <input type="password" id="pwNeu" autocomplete="new-password" minlength="10">
+            </div>
+          </div>
+          <div class="opts" style="display:flex;gap:0.5rem;flex-wrap:wrap">
+            <button class="btn btn-primary btn-sm" id="pwSpeichern">Passwort ändern</button>
+            <button class="btn btn-quiet btn-sm" id="abmelden">Abmelden</button>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-bottom" style="margin-top:0;border-top:none">
+      <a class="tiny" href="/app">← Alle Apps</a>
+      <span class="tiny">Alena</span>
+    </div>
+  </div>
+</footer>
+
+<script src="/ambient.js" defer></script>
+<script type="module">
+const $ = (id) => document.getElementById(id);
+const api = async (url, options = {}) => {
+  const res = await fetch(url, {
+    headers: { 'content-type': 'application/json' },
+    ...options,
+    body: options.body ? JSON.stringify(options.body) : undefined,
+  });
+  const out = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(out.error || 'Fehler');
+  return out;
+};
+const flash = (t, kind = 'ok') => {
+  const el = $('msg'); el.textContent = t; el.className = `msg ${kind} show`;
+  el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  setTimeout(() => el.classList.remove('show'), 7000);
+};
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
+  ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+let me = null;
+let zyklus = null;
+let speichern = null;
+
+/* Was diese Apps später melden werden – damit hier nicht sieben Mal
+   derselbe Platzhalter steht. */
+const AUSBLICK = {
+  todo: 'Die App ist da. Erinnerungen kommen als Nächstes: ein Hinweis vor der Fälligkeit und eine Tagesübersicht am Morgen.',
+  kalender: 'Wird gerade gebaut. Später hier: Vorlauf vor Terminen und der Blick auf den nächsten Tag.',
+  medikamente: 'Wird gerade gebaut. Später hier: Einnahmezeiten je Medikament und ein Hinweis, wenn die Packung zur Neige geht.',
+  lernatelier: 'Wird gerade gebaut. Später hier: Lernblöcke, fällige Karteikarten und Prüfungstermine.',
+  ziele: 'Die App ist da. Erinnerungen kommen als Nächstes: wöchentlicher Rückblick und ein Anstoss bei liegengebliebenen Schritten.',
+  rezepte: 'Wird gerade gebaut. Später hier: Einkaufsliste und eine Erinnerung, wenn du ein Rezept eingeplant hast.',
+};
+
+/* ------------------------------------------------------------- Farbpakete */
+function renderPakete() {
+  const box = $('pakete');
+  box.innerHTML = '';
+  for (const p of window.AlenaTheme.PAKETE) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'paket';
+    b.dataset.paletteBtn = p.id;
+    b.setAttribute('aria-pressed', String(window.AlenaTheme.palette() === p.id));
+    b.innerHTML = `
+      <span class="proben">${p.proben.map((f) => `<i style="background:${f}"></i>`).join('')}</span>
+      <span><b>${esc(p.name)}</b><span>${esc(p.beschreibung)}</span></span>`;
+    box.appendChild(b);
+  }
+  window.AlenaTheme.verdrahten();
+}
+
+/* ------------------------------------------------- Mitteilungen am Gerät */
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+  || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+
+const b64ToUint8 = (base64) => {
+  const pad = '='.repeat((4 - (base64.length % 4)) % 4);
+  const raw = atob((base64 + pad).replace(/-/g, '+').replace(/_/g, '/'));
+  return Uint8Array.from([...raw].map((c) => c.charCodeAt(0)));
+};
+
+async function renderGeraet() {
+  const box = $('geraet');
+  const unterstuetzt = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+
+  if (isIOS && !standalone) {
+    box.innerHTML = `<div class="hint" style="padding:0.9rem 1.1rem;border-radius:12px;background:var(--accent-soft);border:1px solid var(--line);font-size:0.88rem;color:var(--text-soft)">
+      <strong>Auf dem iPhone zuerst installieren.</strong> In Safari auf <em>Teilen</em> tippen,
+      dann <em>„Zum Home-Bildschirm“</em>. Danach Alena über das neue Symbol öffnen –
+      erst dann erlaubt Apple Mitteilungen.</div>`;
+    return;
+  }
+  if (!unterstuetzt) {
+    box.innerHTML = '<p class="tiny" style="margin:0">Dieser Browser kann keine Mitteilungen empfangen.</p>';
+    return;
+  }
+  if (!me.vapidPublicKey) {
+    box.innerHTML = '<p class="tiny" style="margin:0">Der Server hat noch keine Push-Schlüssel. Bitte beim Host melden.</p>';
+    return;
+  }
+
+  const erlaubt = Notification.permission === 'granted';
+  const verweigert = Notification.permission === 'denied';
+
+  box.innerHTML = `
+    <div class="schalter">
+      <div>
+        <strong>${erlaubt ? 'Mitteilungen sind erlaubt' : 'Mitteilungen erlauben'}</strong>
+        <p>${verweigert
+          ? 'Der Browser hat sie blockiert. Das lässt sich nur in den Browsereinstellungen wieder ändern.'
+          : erlaubt
+            ? 'Alena darf sich auf diesem Gerät melden.'
+            : 'Einmalig bestätigen, danach kommen die Erinnerungen an.'}</p>
+      </div>
+      <div class="rechts">
+        ${erlaubt
+          ? '<button class="btn btn-quiet btn-sm" id="testen">Testmitteilung</button>'
+          : `<button class="btn btn-primary btn-sm" id="erlauben" ${verweigert ? 'disabled' : ''}>Erlauben</button>`}
+      </div>
+    </div>`;
+
+  $('erlauben')?.addEventListener('click', async () => {
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') return flash('Mitteilungen wurden nicht erlaubt.', 'error');
+      const reg = await navigator.serviceWorker.ready;
+      const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: b64ToUint8(me.vapidPublicKey),
+      });
+      await api('/api/push?do=subscribe', {
+        method: 'POST',
+        body: { subscription: sub.toJSON(), label: navigator.platform || 'Gerät' },
+      });
+      flash('Dieses Gerät empfängt jetzt Mitteilungen.');
+      renderGeraet();
+    } catch (err) { flash(err.message, 'error'); }
+  });
+
+  $('testen')?.addEventListener('click', async () => {
+    try {
+      const out = await api('/api/push?do=send', {
+        method: 'POST',
+        body: { title: 'Alena', body: 'Testmitteilung – so meldet sich Alena bei dir.', url: '/app' },
+      });
+      flash(out.sent
+        ? `An ${out.sent} Gerät${out.sent === 1 ? '' : 'e'} geschickt.`
+        : 'Kein Gerät angemeldet.');
+    } catch (err) { flash(err.message, 'error'); }
+  });
+}
+
+/* --------------------------------------------- Anlässe je App */
+function schalter({ titel, text, an, onToggle, extra = '' }) {
+  const el = document.createElement('div');
+  el.className = 'schalter';
+  el.innerHTML = `
+    <div><strong>${titel}</strong><p>${text}</p></div>
+    <div class="rechts">${extra}
+      <button class="knopf" type="button" aria-pressed="${an}">${an ? 'An' : 'Aus'}</button>
+    </div>`;
+  const knopf = el.querySelector('.knopf');
+  knopf.addEventListener('click', () => {
+    const neu = knopf.getAttribute('aria-pressed') !== 'true';
+    knopf.setAttribute('aria-pressed', String(neu));
+    knopf.textContent = neu ? 'An' : 'Aus';
+    onToggle(neu);
+  });
+  return el;
+}
+
+function zyklusSpeichern() {
+  clearTimeout(speichern);
+  $('saveState').textContent = 'Speichert …';
+  speichern = setTimeout(async () => {
+    try {
+      const out = await api('/api/cycle', { method: 'PUT', body: { data: zyklus } });
+      zyklus = out.data;
+      $('saveState').textContent = 'Gespeichert';
+      setTimeout(() => { $('saveState').textContent = ''; }, 2000);
+    } catch (err) {
+      $('saveState').textContent = '';
+      flash(err.message, 'error');
+    }
+  }, 600);
+}
+
+function renderPeriode(ziel) {
+  const r = zyklus.settings.reminders;
+  const pille = zyklus.settings.pill;
+
+  ziel.appendChild(schalter({
+    titel: '„Hast du deine Pille genommen?“',
+    text: pille.enabled
+      ? `Täglich um ${esc(pille.time || '08:00')}, solange die Einnahme nicht abgehakt ist.`
+      : 'Erscheint, sobald die Pille im Periodentracker eingeschaltet ist.',
+    an: r.pill !== false && pille.enabled,
+    extra: pille.enabled
+      ? `<input class="zeit" type="time" id="pillenZeit" value="${esc(pille.time || '08:00')}">` : '',
+    onToggle: (an) => { r.pill = an; zyklusSpeichern(); },
+  }));
+
+  ziel.querySelector('#pillenZeit')?.addEventListener('change', (e) => {
+    zyklus.settings.pill.time = e.target.value || '08:00';
+    zyklusSpeichern();
+  });
+
+  ziel.appendChild(schalter({
+    titel: '„Hast du deine Tage bekommen?“',
+    text: `Ab ${r.periodAhead} Tag${r.periodAhead === 1 ? '' : 'en'} vor dem erwarteten Termin bis zwei Wochen danach.`,
+    an: r.period !== false,
+    extra: `<input class="zeit" type="time" id="checkinZeit" value="${esc(r.checkinTime || '09:00')}">`,
+    onToggle: (an) => { r.period = an; zyklusSpeichern(); },
+  }));
+
+  ziel.querySelector('#checkinZeit')?.addEventListener('change', (e) => {
+    zyklus.settings.reminders.checkinTime = e.target.value || '09:00';
+    zyklusSpeichern();
+  });
+
+  const vorlauf = document.createElement('div');
+  vorlauf.className = 'schalter';
+  vorlauf.innerHTML = `
+    <div><strong>Vorlauf</strong><p>Wie viele Tage vor dem erwarteten Termin Alena zu fragen beginnt.</p></div>
+    <div class="rechts"><input class="zeit" type="number" min="0" max="7" id="vorlauf" value="${r.periodAhead}"></div>`;
+  vorlauf.querySelector('#vorlauf').addEventListener('change', (e) => {
+    zyklus.settings.reminders.periodAhead = Math.max(0, Math.min(7, Number(e.target.value) || 0));
+    zyklusSpeichern();
+    flash('Vorlauf gespeichert.');
+  });
+  ziel.appendChild(vorlauf);
+}
+
+async function renderApps() {
+  const box = $('appliste');
+  box.innerHTML = '';
+  const offen = me.modules.filter((m) => me.user.modules?.[m.id]);
+
+  if (!offen.length) {
+    box.innerHTML = '<p class="tiny" style="margin:0">Für dein Konto ist noch keine App freigeschaltet.</p>';
+    return;
+  }
+
+  for (const m of offen) {
+    const el = document.createElement('div');
+    el.className = 'app-block';
+    el.innerHTML = `
+      <div class="app-kopf"><span class="icon">${esc(m.icon)}</span><b>${esc(m.name)}</b></div>`;
+
+    if (m.id === 'periode') {
+      if (!zyklus) {
+        try { zyklus = (await api('/api/cycle')).data; } catch { zyklus = null; }
+      }
+      if (zyklus) {
+        renderPeriode(el);
+      } else {
+        el.innerHTML += '<p class="tiny" style="margin:0">Die Einstellungen liessen sich nicht laden.</p>';
+      }
+    } else {
+      el.classList.add('ruht');
+      el.innerHTML += `<p class="tiny" style="margin:0">${AUSBLICK[m.id] || 'Diese App wird gerade gebaut.'}</p>`;
+    }
+    box.appendChild(el);
+  }
+}
+
+/* --------------------------------------------------------------- Konto */
+$('pwSpeichern').addEventListener('click', async () => {
+  const current = $('pwAlt').value, next = $('pwNeu').value;
+  if (!current || !next) return flash('Bitte beide Felder ausfüllen.', 'error');
+  try {
+    await api('/api/auth?do=password', { method: 'POST', body: { current, next } });
+    $('pwAlt').value = ''; $('pwNeu').value = '';
+    flash('Passwort geändert. Andere Geräte wurden abgemeldet.');
+  } catch (err) { flash(err.message, 'error'); }
+});
+
+$('abmelden').addEventListener('click', async () => {
+  await api('/api/auth?do=logout', { method: 'POST' }).catch(() => {});
+  location.href = '/';
+});
+
+/* ----------------------------------------------------------------- Start */
+(async () => {
+  if ('serviceWorker' in navigator) {
+    try { await navigator.serviceWorker.register('/sw.js'); } catch {}
+  }
+  renderPakete();
+  addEventListener('alena:theme', () => {
+    document.querySelectorAll('[data-palette-btn]').forEach((b) =>
+      b.setAttribute('aria-pressed', String(b.dataset.paletteBtn === window.AlenaTheme.palette())));
+  });
+
+  try { me = await api('/api/auth?do=me'); } catch { me = { user: null }; }
+  if (!me.user) return void (location.href = '/');
+
+  $('titel').textContent = `Angemeldet als ${me.user.name || me.user.username}.`;
+  $('kontoInfo').textContent =
+    `Angemeldet als ${me.user.username}${me.user.role === 'host' ? ' (Host)' : ''}.`;
+
+  await renderGeraet();
+  await renderApps();
+})();
+</script>
+</body>
+</html>
