@@ -1,0 +1,926 @@
+<!doctype html>
+<html lang="de" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Periodentracker – Alena</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0d0a22">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/favicon.png" sizes="32x32">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Alena">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="/styles.css">
+<script src="/theme.js"></script>
+<style>
+  :root {
+    --periode: #e0567a;
+    --periode-soft: rgba(224, 86, 122, 0.22);
+    --fruchtbar: #4fb6c6;
+    --fruchtbar-soft: rgba(79, 182, 198, 0.2);
+    --eisprung: #35a0b4;
+    --pille: #a88cf0;
+  }
+  .cols { display: grid; gap: 1.2rem; grid-template-columns: 360px minmax(0, 1fr); align-items: start; }
+  @media (max-width: 940px) { .cols { grid-template-columns: 1fr; } }
+
+  /* ------------------------------------------------------------- Ring */
+  .ring-card { text-align: center; padding: 1.8rem 1.4rem; }
+  .ring { position: relative; width: 230px; height: 230px; margin: 0 auto 1.2rem; }
+  .ring svg { transform: rotate(-90deg); width: 100%; height: 100%; }
+  .ring-mid {
+    position: absolute; inset: 0; display: grid; place-content: center; gap: 0.15rem;
+  }
+  .ring-mid .big { font-size: 3rem; font-weight: 700; line-height: 1; letter-spacing: -0.04em; }
+  .ring-mid .lbl { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.14em; color: var(--text-dim); }
+  .ring-mid .phase { font-size: 0.95rem; font-weight: 600; margin-top: 0.35rem; }
+  .ring-note { color: var(--text-soft); font-size: 0.92rem; margin: 0 0 1.2rem; }
+
+  .stack { display: grid; gap: 0.6rem; }
+
+  /* --------------------------------------------------------- Kalender */
+  .cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+  .cal-head b { font-size: 1.05rem; font-weight: 600; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .cal-grid .wd { text-align: center; font-size: 0.7rem; color: var(--text-dim); padding-bottom: 0.3rem; text-transform: uppercase; letter-spacing: 0.06em; }
+  .day {
+    position: relative; aspect-ratio: 1; border-radius: 12px; border: 1px solid transparent;
+    background: none; color: var(--text); font: inherit; font-size: 0.85rem; cursor: pointer;
+    display: grid; place-items: center; transition: background 0.15s ease, border-color 0.15s ease;
+  }
+  .day:hover { border-color: var(--line-strong); }
+  .day.other { color: var(--text-dim); opacity: 0.35; }
+  .day.today { border-color: var(--peri-400); font-weight: 700; }
+  .day.periode { background: var(--periode); color: #fff; }
+  .day.periode-erwartet { background: var(--periode-soft); border: 1px dashed var(--periode); }
+  .day.fruchtbar { background: var(--fruchtbar-soft); }
+  .day.eisprung { background: var(--fruchtbar); color: #08333a; font-weight: 700; }
+  .day.pillenpause { background: rgba(168, 140, 240, 0.16); }
+  .day .marks { position: absolute; bottom: 4px; display: flex; gap: 2px; }
+  .day .marks i { width: 4px; height: 4px; border-radius: 50%; background: currentColor; opacity: 0.75; }
+  .legend { display: flex; flex-wrap: wrap; gap: 0.9rem; margin-top: 1rem; font-size: 0.78rem; color: var(--text-soft); }
+  .legend span { display: inline-flex; align-items: center; gap: 0.4rem; }
+  .legend i { width: 12px; height: 12px; border-radius: 4px; display: inline-block; }
+
+  /* ---------------------------------------------------------- Eingabe */
+  .opts { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+  .opt {
+    padding: 0.42rem 0.85rem; border-radius: 999px; cursor: pointer; font-size: 0.85rem;
+    border: 1px solid var(--line); background: var(--input-bg); color: var(--text-soft);
+    transition: all 0.15s ease; font-family: inherit;
+  }
+  .opt[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--line-strong); color: var(--text); font-weight: 550; }
+  .opt.flow[aria-pressed="true"] { background: var(--periode); border-color: var(--periode); color: #fff; }
+  .opt:hover { border-color: var(--line-strong); }
+
+  .bars { display: grid; gap: 0.45rem; margin-top: 1.1rem; }
+  .bar { display: grid; grid-template-columns: 68px 1fr 40px; gap: 0.6rem; align-items: center; font-size: 0.8rem; color: var(--text-soft); }
+  .bar .track { display: block; height: 8px; border-radius: 999px; background: var(--surface-strong); overflow: hidden; }
+  .bar .fill { display: block; height: 100%; border-radius: 999px; background: var(--accent); }
+
+  .hint {
+    padding: 0.85rem 1rem; border-radius: 12px; font-size: 0.85rem; line-height: 1.5;
+    background: var(--accent-soft); border: 1px solid var(--line); color: var(--text-soft);
+  }
+  .disclaimer { margin-top: 2rem; font-size: 0.8rem; color: var(--text-dim); line-height: 1.6; max-width: 70ch; }
+
+  .tabs { display: flex; gap: 0.4rem; margin-bottom: 1.4rem; flex-wrap: wrap; }
+  .tab {
+    padding: 0.5rem 1rem; border-radius: 999px; border: 1px solid var(--line); background: var(--surface);
+    color: var(--text-soft); font: inherit; font-size: 0.88rem; cursor: pointer; transition: all 0.18s ease;
+  }
+  .tab[aria-selected="true"] { background: var(--accent); border-color: transparent; color: #fff; font-weight: 600; }
+
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
+  @media (max-width: 520px) { .row { grid-template-columns: 1fr; } }
+  .switch-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.7rem 0; }
+  .switch-row + .switch-row { border-top: 1px solid var(--line-soft); }
+  .switch-row p { margin: 0.15rem 0 0; font-size: 0.82rem; color: var(--text-dim); }
+  .checkin-row {
+    display: flex; flex-wrap: wrap; gap: 1rem;
+    align-items: center; justify-content: space-between;
+  }
+  #checkin .card { border-color: var(--line-strong); }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <a class="brand" href="/app"><img src="/icons/logo.png" alt="" width="38" height="38"><span>Alena</span></a>
+    <div style="display:flex;align-items:center;gap:0.7rem">
+      <span class="tiny" id="saveState"></span>
+      <a class="btn btn-quiet btn-sm" href="/einstellungen">Einstellungen</a>
+      <a class="btn btn-quiet btn-sm" href="/app">Zurück</a>
+    </div>
+  </div>
+</header>
+
+<main class="wrap" style="padding-block:2rem 3rem">
+  <div class="section-head" style="margin-bottom:1.4rem">
+    <div class="eyebrow">Periodentracker</div>
+    <h2>Dein Zyklus</h2>
+  </div>
+
+  <div class="msg" id="msg" role="status"></div>
+
+  <!-- Tägliche Nachfrage – dieselbe, die auch als Mitteilung kommt -->
+  <div id="checkin" class="stack" style="margin-bottom:1.6rem"></div>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" data-tab="heute" aria-selected="true">Heute</button>
+    <button class="tab" role="tab" data-tab="kalender" aria-selected="false">Kalender</button>
+    <button class="tab" role="tab" data-tab="verlauf" aria-selected="false">Verlauf</button>
+    <button class="tab" role="tab" data-tab="statistik" aria-selected="false">Statistik</button>
+    <button class="tab" role="tab" data-tab="pille" aria-selected="false">Pille</button>
+    <button class="tab" role="tab" data-tab="einstellungen" aria-selected="false">Einstellungen</button>
+  </div>
+
+  <!-- ------------------------------------------------------------ Heute -->
+  <section data-panel="heute" style="padding:0">
+    <div class="cols">
+      <div class="card ring-card">
+        <div class="ring">
+          <svg viewBox="0 0 200 200" aria-hidden="true">
+            <circle cx="100" cy="100" r="86" fill="none" stroke="var(--line)" stroke-width="10"></circle>
+            <circle id="ringArc" cx="100" cy="100" r="86" fill="none" stroke="url(#g)" stroke-width="10"
+                    stroke-linecap="round" stroke-dasharray="540" stroke-dashoffset="540"
+                    style="transition:stroke-dashoffset 0.8s ease"></circle>
+            <defs>
+              <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#5b5be8"></stop>
+                <stop offset="100%" stop-color="#e0567a"></stop>
+              </linearGradient>
+            </defs>
+          </svg>
+          <div class="ring-mid">
+            <span class="lbl">Zyklustag</span>
+            <span class="big" id="ringDay">–</span>
+            <span class="phase" id="ringPhase"></span>
+          </div>
+        </div>
+        <p class="ring-note" id="ringNote">Trage deine letzte Periode ein, damit Alena rechnen kann.</p>
+        <div class="stack">
+          <button class="btn btn-primary btn-block" id="periodBtn">Periode hat begonnen</button>
+          <button class="btn btn-ghost btn-block" id="periodEndBtn" hidden>Periode ist vorbei</button>
+          <button class="btn btn-quiet btn-block" id="pillTakeBtn" hidden>Pille für heute nehmen</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 style="margin:0 0 0.2rem">Eintrag für <span id="logDateLabel">heute</span></h3>
+        <p class="tiny" style="margin:0 0 1.3rem">Je mehr du festhältst, desto genauer werden die Vorhersagen.</p>
+
+        <label>Blutung</label>
+        <div class="opts" id="flowOpts" style="margin-bottom:1.3rem"></div>
+
+        <label>Symptome</label>
+        <div class="opts" id="symptomOpts" style="margin-bottom:1.3rem"></div>
+
+        <label>Stimmung</label>
+        <div class="opts" id="moodOpts" style="margin-bottom:1.3rem"></div>
+
+        <div class="field">
+          <label for="note">Notiz</label>
+          <textarea id="note" placeholder="Was möchtest du dir merken?"></textarea>
+        </div>
+
+        <div class="opts">
+          <button class="opt" id="sexOpt" aria-pressed="false" type="button">Sex</button>
+          <button class="btn btn-quiet btn-sm" id="clearDay" type="button">Eintrag leeren</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- --------------------------------------------------------- Kalender -->
+  <section data-panel="kalender" hidden style="padding:0">
+    <div class="cols">
+      <div class="card">
+        <div class="cal-head">
+          <button class="btn btn-quiet btn-sm" id="prevMonth" aria-label="Vorheriger Monat">‹</button>
+          <b id="monthLabel"></b>
+          <button class="btn btn-quiet btn-sm" id="nextMonth" aria-label="Nächster Monat">›</button>
+        </div>
+        <div class="cal-grid" id="calGrid"></div>
+        <div class="legend">
+          <span><i style="background:var(--periode)"></i>Periode</span>
+          <span><i style="background:var(--periode-soft);border:1px dashed var(--periode)"></i>erwartet</span>
+          <span class="fertile-legend"><i style="background:var(--fruchtbar-soft)"></i>fruchtbar</span>
+          <span class="fertile-legend"><i style="background:var(--fruchtbar)"></i>Eisprung</span>
+          <span class="pill-legend" hidden><i style="background:rgba(168,140,240,0.4)"></i>Pillenpause</span>
+        </div>
+      </div>
+      <div class="card">
+        <h3 style="margin:0 0 0.2rem" id="selDate">Tag auswählen</h3>
+        <p class="tiny" id="selInfo" style="margin:0 0 1.2rem"></p>
+        <div id="selDetails"></div>
+        <button class="btn btn-primary btn-sm" id="editSelected" style="margin-top:1rem">Diesen Tag bearbeiten</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------------------------------------------------------- Verlauf -->
+  <section data-panel="verlauf" hidden style="padding:0">
+    <div class="cols">
+      <div class="card">
+        <h3 style="margin:0 0 0.2rem">Erfasste Perioden</h3>
+        <p class="tiny" style="margin:0 0 1.2rem">Hier lässt sich nachtragen und korrigieren.</p>
+        <div id="history" class="stack"></div>
+      </div>
+      <div class="card">
+        <h3 style="margin:0 0 1.2rem">Periode nachtragen</h3>
+        <div class="row">
+          <div class="field">
+            <label for="addStart">Erster Tag</label>
+            <input type="date" id="addStart">
+          </div>
+          <div class="field">
+            <label for="addEnd">Letzter Tag <span class="tiny">(optional)</span></label>
+            <input type="date" id="addEnd">
+          </div>
+        </div>
+        <button class="btn btn-primary btn-sm" id="addPeriod">Eintragen</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- -------------------------------------------------------- Statistik -->
+  <section data-panel="statistik" hidden style="padding:0">
+    <div class="card">
+      <div class="stat-row">
+        <div class="stat"><b id="stCycle">–</b><span>Ø Zykluslänge</span></div>
+        <div class="stat"><b id="stPeriod">–</b><span>Ø Periodendauer</span></div>
+        <div class="stat"><b id="stVar">–</b><span>Schwankung</span></div>
+        <div class="stat"><b id="stCount">–</b><span>erfasste Perioden</span></div>
+      </div>
+      <h3 style="margin:2rem 0 0.4rem;font-size:1.05rem">Letzte Zyklen</h3>
+      <p class="tiny" style="margin:0">Abstand von Periodenbeginn zu Periodenbeginn.</p>
+      <div class="bars" id="bars"></div>
+      <h3 style="margin:2rem 0 0.6rem;font-size:1.05rem">Häufigste Symptome</h3>
+      <div class="bars" id="symptomBars"></div>
+
+      <h3 style="margin:2rem 0 0.6rem;font-size:1.05rem">Kommende Perioden</h3>
+      <div id="forecast" class="stack"></div>
+    </div>
+  </section>
+
+  <!-- ------------------------------------------------------------ Pille -->
+  <section data-panel="pille" hidden style="padding:0">
+    <div class="cols">
+      <div class="card">
+        <h3 style="margin:0 0 0.2rem">Pille</h3>
+        <p class="tiny" style="margin:0 0 1.3rem">Alena zählt die Packung mit und erinnert dich zur eingestellten Zeit.</p>
+
+        <div class="switch-row">
+          <div>
+            <strong>Ich nehme die Pille</strong>
+            <p>Blendet die Fruchtbarkeitsvorhersage aus – unter Hormonen ist sie nicht aussagekräftig.</p>
+          </div>
+          <button class="opt" id="pillEnabled" aria-pressed="false" type="button">Aus</button>
+        </div>
+
+        <div id="pillFields" hidden style="margin-top:1.3rem">
+          <div class="field">
+            <label for="pillType">Schema</label>
+            <select id="pillType"></select>
+          </div>
+          <div class="row">
+            <div class="field">
+              <label for="pillStart">Erste Tablette der aktuellen Packung</label>
+              <input type="date" id="pillStart">
+            </div>
+            <div class="field">
+              <label for="pillTime">Einnahmezeit</label>
+              <input type="time" id="pillTime" value="08:00">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 style="margin:0 0 1rem">Aktuelle Packung</h3>
+        <div id="pillStatus" class="stat-row"></div>
+        <div class="hint" style="margin-top:1.2rem">
+          Bei vergessener Einnahme gilt die Packungsbeilage deines Präparats.
+          Alena erinnert nur – sie ersetzt keine ärztliche Beratung und ist kein Verhütungsschutz.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------------------------------------------------- Einstellungen -->
+  <section data-panel="einstellungen" hidden style="padding:0">
+    <div class="cols">
+      <div class="card">
+        <h3 style="margin:0 0 1.2rem">Zyklus</h3>
+        <div class="row">
+          <div class="field">
+            <label for="setCycle">Zykluslänge (Tage)</label>
+            <input type="number" id="setCycle" min="20" max="45">
+          </div>
+          <div class="field">
+            <label for="setPeriod">Periodendauer (Tage)</label>
+            <input type="number" id="setPeriod" min="1" max="10">
+          </div>
+        </div>
+        <div class="field">
+          <label for="setLuteal">Lutealphase (Tage vor der Periode)</label>
+          <input type="number" id="setLuteal" min="10" max="17">
+        </div>
+        <p class="tiny">Sobald mehrere Perioden erfasst sind, rechnet Alena mit deinen echten Werten statt mit diesen.</p>
+      </div>
+
+      <div class="card">
+        <h3 style="margin:0 0 0.2rem">Tägliche Nachfrage</h3>
+        <p class="tiny" style="margin:0 0 0.6rem">
+          Alena fragt einmal am Tag nach – als Mitteilung mit Antwortknöpfen und als Karte hier oben.
+        </p>
+        <div class="switch-row">
+          <div><strong>„Hast du deine Pille genommen?“</strong><p>Täglich zur Einnahmezeit, solange sie nicht abgehakt ist.</p></div>
+          <button class="opt" id="remPill" aria-pressed="true" type="button">An</button>
+        </div>
+        <div class="switch-row">
+          <div><strong>„Hast du deine Tage bekommen?“</strong><p>Ab dem Vorlauf bis zwei Wochen nach dem erwarteten Termin.</p></div>
+          <button class="opt" id="remPeriod" aria-pressed="true" type="button">An</button>
+        </div>
+        <div class="row" style="margin-top:1.2rem">
+          <div class="field">
+            <label for="remAhead">Vorlauf (Tage)</label>
+            <input type="number" id="remAhead" min="0" max="7">
+          </div>
+          <div class="field">
+            <label for="remTime">Uhrzeit der Nachfrage</label>
+            <input type="time" id="remTime">
+          </div>
+        </div>
+        <div class="opts">
+          <button class="btn btn-quiet btn-sm" id="testPush" type="button">Testmitteilung senden</button>
+          <button class="btn btn-quiet btn-sm" id="exportData" type="button">Daten herunterladen</button>
+          <button class="btn btn-quiet btn-sm" id="wipe" type="button">Alles löschen</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <p class="disclaimer">
+    Die Vorhersagen beruhen auf dem Durchschnitt deiner erfassten Zyklen und sind Schätzungen.
+    Sie eignen sich <strong>nicht zur Verhütung</strong> und ersetzen keine ärztliche Beratung.
+    Bei starken Schmerzen, ausbleibender oder ungewöhnlicher Blutung wende dich an deine Ärztin
+    oder deinen Arzt. Deine Einträge liegen nur in deinem Konto und werden nicht weitergegeben.
+  </p>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-bottom" style="margin-top:0;border-top:none">
+      <a class="tiny" href="/app">← Alle Apps</a>
+      <div class="theme-switch" role="group" aria-label="Darstellung">
+        <button type="button" data-theme-btn="dark" aria-pressed="true">Dunkel</button>
+        <button type="button" data-theme-btn="light" aria-pressed="false">Hell</button>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="/ambient.js" defer></script>
+<script type="module">
+import {
+  analyse, dayKind, toISO, addDays, diffDays, todayISO, emptyCycleData, pendingQuestions,
+  PILL_TYPES, FLOW_LEVELS, SYMPTOMS, MOODS, PHASE_TEXT,
+} from '/cycle-core.js';
+
+const $ = (id) => document.getElementById(id);
+const api = async (url, options = {}) => {
+  const res = await fetch(url, {
+    headers: { 'content-type': 'application/json' },
+    ...options,
+    body: options.body ? JSON.stringify(options.body) : undefined,
+  });
+  const out = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(out.error || 'Fehler');
+  return out;
+};
+const flash = (t, kind = 'ok') => {
+  const el = $('msg'); el.textContent = t; el.className = `msg ${kind} show`;
+  setTimeout(() => el.classList.remove('show'), 6000);
+};
+const fmt = (iso, opts = { day: 'numeric', month: 'long' }) =>
+  iso ? new Date(iso + 'T12:00:00').toLocaleDateString('de-CH', opts) : '–';
+
+let data = emptyCycleData();
+let view = new Date();
+let selected = todayISO();
+let saveTimer = null;
+
+/* --------------------------------------------------------------- Speichern */
+const markDirty = () => {
+  $('saveState').textContent = 'Speichert …';
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(save, 700);
+};
+async function save() {
+  try {
+    const out = await api('/api/cycle', { method: 'PUT', body: { data } });
+    data = out.data;
+    $('saveState').textContent = 'Gespeichert';
+    setTimeout(() => { $('saveState').textContent = ''; }, 2000);
+    render();
+  } catch (err) {
+    $('saveState').textContent = '';
+    flash(err.message, 'error');
+  }
+}
+
+/* ------------------------------------------------------------------ Reiter */
+document.querySelectorAll('.tab').forEach((tab) => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach((t) => t.setAttribute('aria-selected', String(t === tab)));
+    document.querySelectorAll('[data-panel]').forEach((p) => {
+      p.hidden = p.dataset.panel !== tab.dataset.tab;
+    });
+  });
+});
+
+/* ------------------------------------------------------------- Eingabefeld */
+const dayEntry = (iso) => (data.days[iso] ||= {});
+
+function buildOptions() {
+  $('flowOpts').innerHTML = '';
+  for (const f of FLOW_LEVELS) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'opt flow'; b.textContent = f.label;
+    b.addEventListener('click', () => {
+      const e = dayEntry(selected);
+      e.flow = e.flow === f.id ? undefined : f.id;
+      if (!e.flow) delete e.flow;
+      markDirty(); renderDay();
+    });
+    $('flowOpts').appendChild(b);
+    f.el = b;
+  }
+  $('symptomOpts').innerHTML = '';
+  for (const s of SYMPTOMS) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'opt'; b.textContent = s.label;
+    b.addEventListener('click', () => {
+      const e = dayEntry(selected);
+      const list = new Set(e.symptoms || []);
+      list.has(s.id) ? list.delete(s.id) : list.add(s.id);
+      e.symptoms = [...list];
+      if (!e.symptoms.length) delete e.symptoms;
+      markDirty(); renderDay();
+    });
+    $('symptomOpts').appendChild(b);
+    s.el = b;
+  }
+  $('moodOpts').innerHTML = '';
+  for (const m of MOODS) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'opt'; b.textContent = m.label;
+    b.addEventListener('click', () => {
+      const e = dayEntry(selected);
+      e.mood = e.mood === m.id ? undefined : m.id;
+      if (!e.mood) delete e.mood;
+      markDirty(); renderDay();
+    });
+    $('moodOpts').appendChild(b);
+    m.el = b;
+  }
+  $('pillType').innerHTML = Object.entries(PILL_TYPES)
+    .map(([id, t]) => `<option value="${id}">${t.label}</option>`).join('');
+}
+
+function renderDay() {
+  const e = data.days[selected] || {};
+  $('logDateLabel').textContent = selected === todayISO() ? 'heute' : fmt(selected);
+  FLOW_LEVELS.forEach((f) => f.el.setAttribute('aria-pressed', String(e.flow === f.id)));
+  SYMPTOMS.forEach((s) => s.el.setAttribute('aria-pressed', String((e.symptoms || []).includes(s.id))));
+  MOODS.forEach((m) => m.el.setAttribute('aria-pressed', String(e.mood === m.id)));
+  $('note').value = e.note || '';
+  $('sexOpt').setAttribute('aria-pressed', String(e.sex === true));
+}
+
+$('note').addEventListener('input', () => {
+  const e = dayEntry(selected);
+  e.note = $('note').value;
+  if (!e.note.trim()) delete e.note;
+  markDirty();
+});
+$('sexOpt').addEventListener('click', () => {
+  const e = dayEntry(selected);
+  e.sex ? delete e.sex : (e.sex = true);
+  markDirty(); renderDay();
+});
+$('clearDay').addEventListener('click', () => {
+  delete data.days[selected];
+  markDirty(); renderDay();
+});
+
+/* ------------------------------------------------------------- Periode an/aus */
+$('periodBtn').addEventListener('click', () => {
+  const start = todayISO();
+  if (!data.periods.some((p) => p.start === start)) {
+    data.periods.push({ start, end: null });
+    data.periods.sort((a, b) => a.start.localeCompare(b.start));
+  }
+  const e = dayEntry(start);
+  e.flow ||= 'mittel';
+  markDirty();
+});
+$('periodEndBtn').addEventListener('click', () => {
+  const open = [...data.periods].reverse().find((p) => !p.end);
+  if (open) open.end = todayISO();
+  markDirty();
+});
+$('pillTakeBtn').addEventListener('click', () => {
+  const e = dayEntry(todayISO());
+  e.pill ? delete e.pill : (e.pill = true);
+  markDirty();
+});
+
+/* ---------------------------------------------------------------- Kalender */
+$('prevMonth').addEventListener('click', () => { view.setMonth(view.getMonth() - 1); renderCalendar(); });
+$('nextMonth').addEventListener('click', () => { view.setMonth(view.getMonth() + 1); renderCalendar(); });
+$('editSelected').addEventListener('click', () => {
+  document.querySelector('.tab[data-tab="heute"]').click();
+  renderDay();
+});
+
+function renderCalendar() {
+  const a = analyse(data);
+  const year = view.getFullYear(), month = view.getMonth();
+  $('monthLabel').textContent = view.toLocaleDateString('de-CH', { month: 'long', year: 'numeric' });
+
+  const grid = $('calGrid');
+  grid.innerHTML = '';
+  for (const wd of ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']) {
+    const el = document.createElement('div');
+    el.className = 'wd'; el.textContent = wd;
+    grid.appendChild(el);
+  }
+
+  const first = new Date(year, month, 1);
+  const offset = (first.getDay() + 6) % 7;     // Woche beginnt am Montag
+  const start = new Date(year, month, 1 - offset);
+
+  for (let i = 0; i < 42; i++) {
+    const d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
+    const iso = toISO(d);
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'day';
+    btn.textContent = d.getDate();
+    if (d.getMonth() !== month) btn.classList.add('other');
+    if (iso === todayISO()) btn.classList.add('today');
+    const kind = dayKind(iso, a);
+    if (kind) btn.classList.add(kind);
+
+    const e = data.days[iso];
+    if (e && (e.symptoms?.length || e.mood || e.note || e.sex)) {
+      const marks = document.createElement('span');
+      marks.className = 'marks';
+      marks.innerHTML = '<i></i>';
+      btn.appendChild(marks);
+    }
+    btn.addEventListener('click', () => { selected = iso; renderSelected(); renderDay(); });
+    grid.appendChild(btn);
+  }
+
+  document.querySelectorAll('.fertile-legend').forEach((el) => { el.hidden = a.onPill; });
+  document.querySelector('.pill-legend').hidden = !a.onPill;
+  renderSelected();
+}
+
+function renderSelected() {
+  const a = analyse(data);
+  $('selDate').textContent = fmt(selected, { weekday: 'long', day: 'numeric', month: 'long' });
+  const kind = dayKind(selected, a);
+  const names = {
+    periode: 'Periode', 'periode-erwartet': 'Periode erwartet',
+    fruchtbar: 'Fruchtbares Fenster', eisprung: 'Eisprung erwartet', pillenpause: 'Pillenpause',
+  };
+  $('selInfo').textContent = kind ? names[kind] : 'Kein besonderer Tag';
+
+  const e = data.days[selected] || {};
+  const parts = [];
+  if (e.flow) parts.push(`<strong>Blutung:</strong> ${FLOW_LEVELS.find((f) => f.id === e.flow).label}`);
+  if (e.symptoms?.length) {
+    parts.push(`<strong>Symptome:</strong> ${e.symptoms.map((id) => SYMPTOMS.find((s) => s.id === id)?.label).join(', ')}`);
+  }
+  if (e.mood) parts.push(`<strong>Stimmung:</strong> ${MOODS.find((m) => m.id === e.mood).label}`);
+  if (e.pill) parts.push('<strong>Pille:</strong> genommen');
+  if (e.sex) parts.push('<strong>Sex</strong>');
+  if (e.note) parts.push(`<em>${e.note.replace(/[<>&]/g, '')}</em>`);
+  $('selDetails').innerHTML = parts.length
+    ? parts.map((p) => `<p style="margin:0 0 0.5rem;font-size:0.9rem;color:var(--text-soft)">${p}</p>`).join('')
+    : '<p class="tiny" style="margin:0">Noch nichts eingetragen.</p>';
+}
+
+/* ------------------------------------------------- Tägliche Nachfrage */
+const betont = new URL(location.href).searchParams.get('frage');
+
+async function antworte(frage, antwort) {
+  try {
+    const out = await api('/api/cycle?do=quick', { method: 'POST', body: { frage, antwort } });
+    data = out.data;
+    render();
+    flash(antwort === 'ja' ? 'Notiert – danke.' : 'Alles klar, ich frage morgen nochmals.');
+  } catch (err) {
+    flash(err.message, 'error');
+  }
+}
+
+function renderCheckin() {
+  const box = $('checkin');
+  const fragen = pendingQuestions(data);
+  box.innerHTML = '';
+  if (!fragen.length) return;
+
+  for (const f of fragen) {
+    const el = document.createElement('div');
+    el.className = 'card';
+    el.style.padding = '1.3rem 1.5rem';
+    if (betont === f.id) el.style.borderColor = 'var(--peri-400)';
+    el.innerHTML = `
+      <div class="checkin-row">
+        <div>
+          <h3 style="margin:0 0 0.25rem;font-size:1.15rem">${f.frage}</h3>
+          <p class="tiny" style="margin:0">${f.zusatz}</p>
+        </div>
+        <div class="opts" style="flex-wrap:nowrap">
+          <button class="btn btn-primary btn-sm" data-antwort="ja">${f.ja}</button>
+          <button class="btn btn-quiet btn-sm" data-antwort="nein">${f.nein}</button>
+        </div>
+      </div>`;
+    el.querySelector('[data-antwort="ja"]').addEventListener('click', () => antworte(f.id, 'ja'));
+    el.querySelector('[data-antwort="nein"]')
+      .addEventListener('click', () => antworte(f.id, f.id === 'pille' ? 'spaeter' : 'nein'));
+    box.appendChild(el);
+  }
+}
+
+/* Meldet sich der Service Worker nach einer Antwort aus der Mitteilung,
+   holen wir den frischen Stand. */
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('message', async (e) => {
+    if (e.data?.typ !== 'zyklus-aktualisiert') return;
+    try {
+      const out = await api('/api/cycle');
+      data = out.data;
+      render();
+    } catch { /* still */ }
+  });
+}
+
+/* ------------------------------------------------------------- Verlauf */
+function renderHistory() {
+  const box = $('history');
+  const list = [...(data.periods || [])].reverse();
+  if (!list.length) {
+    box.innerHTML = '<p class="tiny" style="margin:0">Noch keine Periode erfasst.</p>';
+    return;
+  }
+  box.innerHTML = '';
+  list.forEach((p) => {
+    const dauer = p.end ? diffDays(p.start, p.end) + 1 : null;
+    const el = document.createElement('div');
+    el.className = 'stat';
+    el.innerHTML = `
+      <div class="checkin-row">
+        <div>
+          <b style="font-size:1.05rem">${fmt(p.start, { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })}</b>
+          <span>${dauer ? `${dauer} Tage` : 'Ende offen'}</span>
+        </div>
+        <button class="btn btn-quiet btn-sm" type="button">Löschen</button>
+      </div>`;
+    el.querySelector('button').addEventListener('click', () => {
+      if (!confirm(`Periode vom ${fmt(p.start)} löschen?`)) return;
+      data.periods = data.periods.filter((x) => x.start !== p.start);
+      markDirty(); render();
+    });
+    box.appendChild(el);
+  });
+}
+
+$('addPeriod').addEventListener('click', () => {
+  const start = $('addStart').value;
+  const end = $('addEnd').value || null;
+  if (!start) return flash('Bitte den ersten Tag angeben.', 'error');
+  if (end && diffDays(start, end) < 0) return flash('Das Ende liegt vor dem Beginn.', 'error');
+  if (data.periods.some((p) => p.start === start)) return flash('Für diesen Tag gibt es schon einen Eintrag.', 'error');
+  data.periods.push({ start, end });
+  data.periods.sort((a, b) => a.start.localeCompare(b.start));
+  $('addStart').value = ''; $('addEnd').value = '';
+  markDirty(); render();
+  flash('Periode nachgetragen.');
+});
+
+/* ---------------------------------------------------------- Auswertung */
+function renderInsights() {
+  const zaehler = new Map();
+  let tage = 0;
+  for (const e of Object.values(data.days || {})) {
+    if (!e.symptoms?.length) continue;
+    tage++;
+    for (const id of e.symptoms) zaehler.set(id, (zaehler.get(id) || 0) + 1);
+  }
+  const top = [...zaehler.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6);
+  const max = top.length ? top[0][1] : 1;
+
+  $('symptomBars').innerHTML = top.length
+    ? top.map(([id, n]) => `
+        <div class="bar">
+          <span>${SYMPTOMS.find((s) => s.id === id)?.label || id}</span>
+          <span class="track"><span class="fill" style="width:${(n / max) * 100}%"></span></span>
+          <span>${n}×</span>
+        </div>`).join('')
+      + `<p class="tiny" style="margin:0.6rem 0 0">Aus ${tage} Tag${tage === 1 ? '' : 'en'} mit Einträgen.</p>`
+    : '<p class="tiny" style="margin:0">Sobald du Symptome einträgst, erscheint hier die Häufigkeit.</p>';
+}
+
+/* ------------------------------------------------------------------ Ansicht */
+function render() {
+  const a = analyse(data);
+  renderCheckin();
+  renderHistory();
+  renderInsights();
+
+  /* Ring */
+  const pct = a.cycleDay ? Math.min(1, a.cycleDay / a.avgCycle) : 0;
+  $('ringArc').style.strokeDashoffset = String(540 - 540 * pct);
+  $('ringDay').textContent = a.cycleDay ?? '–';
+  $('ringPhase').textContent = PHASE_TEXT[a.phase] || '';
+
+  if (a.bleedingToday) {
+    $('ringNote').textContent = 'Deine Periode läuft. Alles Gute.';
+  } else if (a.overdueDays > 0) {
+    $('ringNote').innerHTML =
+      `Der erwartete Termin liegt <strong>${a.overdueDays} Tag${a.overdueDays === 1 ? '' : 'e'}</strong> zurück – `
+      + `erwartet war ${fmt(a.nextPeriod)}. Zyklen schwanken; bei anhaltendem Ausbleiben ärztlich abklären lassen.`;
+  } else if (a.daysUntilPeriod === 0) {
+    $('ringNote').textContent = 'Heute wird deine Periode erwartet.';
+  } else if (a.daysUntilPeriod != null) {
+    $('ringNote').innerHTML = `Nächste Periode in <strong>${a.daysUntilPeriod} Tagen</strong> – ${fmt(a.nextPeriod)}.`;
+  } else {
+    $('ringNote').textContent = 'Trage deine letzte Periode ein, damit Alena rechnen kann.';
+  }
+
+  $('periodBtn').textContent = a.bleedingToday ? 'Periode neu eintragen' : 'Periode hat begonnen';
+  $('periodEndBtn').hidden = !data.periods.some((p) => !p.end);
+
+  /* Pille */
+  const takenToday = data.days[todayISO()]?.pill === true;
+  $('pillTakeBtn').hidden = !a.onPill;
+  $('pillTakeBtn').textContent = takenToday ? '✓ Pille genommen' : 'Pille für heute nehmen';
+
+  $('pillEnabled').setAttribute('aria-pressed', String(a.onPill));
+  $('pillEnabled').textContent = a.onPill ? 'An' : 'Aus';
+  $('pillFields').hidden = !a.onPill;
+  $('pillType').value = a.settings.pill.type;
+  $('pillStart').value = a.settings.pill.packStart || '';
+  $('pillTime').value = a.settings.pill.time || '08:00';
+
+  const ps = $('pillStatus');
+  if (!a.onPill) {
+    ps.innerHTML = '<p class="tiny" style="margin:0">Die Pille ist ausgeschaltet.</p>';
+  } else if (!a.pill) {
+    ps.innerHTML = '<p class="tiny" style="margin:0">Trage das Datum der ersten Tablette ein.</p>';
+  } else {
+    ps.innerHTML = `
+      <div class="stat"><b>${a.pill.dayInPack} / ${a.pill.total}</b><span>Tag in der Packung</span></div>
+      <div class="stat"><b>${a.pill.isBreak ? a.pill.breakLabel : 'Einnahme'}</b><span>heute</span></div>
+      <div class="stat"><b>${a.pill.packEndsIn}</b><span>Tage bis zur neuen Packung</span></div>
+      ${a.pill.breakLabel && !a.pill.isBreak
+        ? `<div class="stat"><b>${a.pill.daysUntilBreak}</b><span>Tage bis zur ${a.pill.breakLabel}</span></div>` : ''}`;
+  }
+
+  /* Statistik */
+  $('stCycle').textContent = `${a.avgCycle} T`;
+  $('stPeriod').textContent = `${a.avgPeriod} T`;
+  $('stVar').textContent = a.variability == null ? '–' : `± ${a.variability} T`;
+  $('stCount').textContent = a.cycleCount;
+
+  const max = Math.max(35, ...a.recentGaps);
+  $('bars').innerHTML = a.recentGaps.length
+    ? a.recentGaps.map((g, i) => `
+        <div class="bar">
+          <span>Zyklus ${a.cycleCount - a.recentGaps.length + i}</span>
+          <span class="track"><span class="fill" style="width:${(g / max) * 100}%"></span></span>
+          <span>${g} T</span>
+        </div>`).join('')
+    : '<p class="tiny" style="margin:0">Ab der zweiten erfassten Periode erscheint hier deine Zykluslänge.</p>';
+
+  $('forecast').innerHTML = a.upcoming.length
+    ? a.upcoming.map((iso) => `
+        <div class="stat"><b style="font-size:1.1rem">${fmt(iso, { weekday: 'short', day: 'numeric', month: 'long' })}</b>
+        <span>voraussichtlich ${a.avgPeriod} Tage</span></div>`).join('')
+      + (a.onPill
+        ? '<p class="tiny" style="margin:0.6rem 0 0">Unter der Pille handelt es sich um die Abbruchblutung in der Pause.</p>'
+        : `<p class="tiny" style="margin:0.6rem 0 0">Eisprung voraussichtlich am ${fmt(a.ovulation)}, fruchtbares Fenster ${fmt(a.fertileFrom)} bis ${fmt(a.fertileTo)}.</p>`)
+    : '<p class="tiny" style="margin:0">Noch keine Vorhersage möglich.</p>';
+
+  /* Einstellungen */
+  $('setCycle').value = a.settings.cycleLength;
+  $('setPeriod').value = a.settings.periodLength;
+  $('setLuteal').value = a.settings.lutealPhase;
+  $('remAhead').value = a.settings.reminders.periodAhead;
+  $('remTime').value = a.settings.reminders.checkinTime || '09:00';
+  $('remPill').setAttribute('aria-pressed', String(a.settings.reminders.pill !== false));
+  $('remPill').textContent = a.settings.reminders.pill !== false ? 'An' : 'Aus';
+  $('remPeriod').setAttribute('aria-pressed', String(a.settings.reminders.period !== false));
+  $('remPeriod').textContent = a.settings.reminders.period !== false ? 'An' : 'Aus';
+
+  renderCalendar();
+  renderDay();
+}
+
+/* ------------------------------------------------------- Einstellungen binden */
+$('pillEnabled').addEventListener('click', () => {
+  data.settings.pill.enabled = !data.settings.pill.enabled;
+  if (data.settings.pill.enabled && !data.settings.pill.packStart) {
+    data.settings.pill.packStart = todayISO();
+  }
+  markDirty(); render();
+});
+$('pillType').addEventListener('change', () => { data.settings.pill.type = $('pillType').value; markDirty(); render(); });
+$('pillStart').addEventListener('change', () => { data.settings.pill.packStart = $('pillStart').value || null; markDirty(); render(); });
+$('pillTime').addEventListener('change', () => { data.settings.pill.time = $('pillTime').value || '08:00'; markDirty(); });
+
+for (const [id, key] of [['setCycle', 'cycleLength'], ['setPeriod', 'periodLength'], ['setLuteal', 'lutealPhase']]) {
+  $(id).addEventListener('change', () => { data.settings[key] = Number($(id).value); markDirty(); render(); });
+}
+$('remAhead').addEventListener('change', () => {
+  data.settings.reminders.periodAhead = Number($('remAhead').value);
+  markDirty(); render();
+});
+$('remTime').addEventListener('change', () => {
+  data.settings.reminders.checkinTime = $('remTime').value || '09:00';
+  markDirty();
+});
+
+$('testPush').addEventListener('click', async () => {
+  try {
+    const out = await api('/api/push?do=send', {
+      method: 'POST',
+      body: {
+        title: 'Alena',
+        body: 'Testmitteilung – so meldet sich Alena bei dir.',
+        url: '/cycle',
+      },
+    });
+    flash(out.sent
+      ? `Testmitteilung an ${out.sent} Gerät${out.sent === 1 ? '' : 'e'} geschickt.`
+      : 'Kein Gerät angemeldet. Erlaube die Mitteilungen zuerst unter „Alle Apps“.');
+  } catch (err) { flash(err.message, 'error'); }
+});
+
+$('exportData').addEventListener('click', () => {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `alena-zyklus-${todayISO()}.json`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 3000);
+});
+$('remPill').addEventListener('click', () => {
+  data.settings.reminders.pill = !(data.settings.reminders.pill !== false);
+  markDirty(); render();
+});
+$('remPeriod').addEventListener('click', () => {
+  data.settings.reminders.period = !(data.settings.reminders.period !== false);
+  markDirty(); render();
+});
+$('wipe').addEventListener('click', async () => {
+  if (!confirm('Wirklich alle Zyklusdaten löschen? Das lässt sich nicht rückgängig machen.')) return;
+  try {
+    const out = await api('/api/cycle', { method: 'DELETE' });
+    data = out.data;
+    flash('Alle Zyklusdaten gelöscht.');
+    render();
+  } catch (err) { flash(err.message, 'error'); }
+});
+
+/* --------------------------------------------------------------------- Start */
+(async () => {
+  buildOptions();
+  try {
+    const out = await api('/api/cycle');
+    data = { ...emptyCycleData(), ...out.data };
+    data.settings = { ...emptyCycleData().settings, ...(out.data.settings || {}) };
+    data.settings.pill = { ...emptyCycleData().settings.pill, ...(out.data.settings?.pill || {}) };
+    data.settings.reminders = { ...emptyCycleData().settings.reminders, ...(out.data.settings?.reminders || {}) };
+    render();
+  } catch (err) {
+    if (String(err.message).includes('Nicht angemeldet')) return void (location.href = '/');
+    flash(err.message, 'error');
+    render();
+  }
+})();
+</script>
+</body>
+</html>
