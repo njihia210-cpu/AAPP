@@ -1,0 +1,1256 @@
+<!doctype html>
+<html lang="de" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lernatelier – Alena</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0d0a22">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/favicon.png" sizes="32x32">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Alena">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="/styles.css">
+<script src="/theme.js"></script>
+<style>
+  .kennzahlen { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 0.7rem; margin-bottom: 1.4rem; }
+  .abschnitt { padding: 0; margin-bottom: 1.6rem; }
+  .abschnitt > h3 {
+    margin: 0 0 0.2rem; font-size: 1.05rem; font-weight: 600; letter-spacing: -0.01em;
+  }
+  .abschnitt > .tiny { margin: 0 0 0.9rem; }
+
+  /* ------------------------------------------------------------ Kapitel */
+  .kapitel {
+    display: grid; gap: 0.5rem; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  }
+  .kap {
+    display: grid; gap: 0.25rem; text-align: left; font: inherit; color: var(--text);
+    cursor: pointer; padding: 0.75rem 0.9rem; border-radius: 12px;
+    background: var(--surface); border: 1px solid var(--line);
+    transition: border-color 0.16s ease, background 0.16s ease;
+  }
+  .kap:hover { border-color: var(--line-strong); }
+  .kap[aria-pressed="true"] { border-color: var(--akzent-1); background: var(--surface-strong); }
+  .kap .zeile1 { display: flex; align-items: baseline; gap: 0.5rem; justify-content: space-between; }
+  .kap b { font-size: 0.9rem; font-weight: 600; }
+  .kap .nr {
+    flex: none; font-size: 0.7rem; color: var(--text-dim); font-variant-numeric: tabular-nums;
+  }
+  .kap span.unter { font-size: 0.78rem; color: var(--text-dim); }
+  .kap .balken { margin-top: 0.35rem; }
+
+  .balken { height: 5px; border-radius: 999px; background: var(--line-soft); overflow: hidden; }
+  .balken i { display: block; height: 100%; border-radius: 999px; background: var(--accent); transition: width 0.35s ease; }
+
+  /* ------------------------------------------------- Chips und Schalter */
+  .reihe { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .chip2 {
+    display: inline-flex; align-items: center; gap: 0.45rem; cursor: pointer;
+    padding: 0.5rem 0.85rem; border-radius: 999px; font: inherit; font-size: 0.85rem;
+    background: var(--surface); border: 1px solid var(--line); color: var(--text-soft);
+  }
+  .chip2[aria-pressed="true"] { border-color: var(--akzent-1); background: var(--surface-strong); color: var(--text); }
+  .chip2 .punkt { width: 7px; height: 7px; border-radius: 50%; background: var(--line-strong); }
+  .chip2[aria-pressed="true"] .punkt { background: var(--accent); }
+
+  .modi { display: grid; gap: 0.6rem; grid-template-columns: repeat(auto-fill, minmax(215px, 1fr)); }
+  .modus {
+    display: grid; gap: 0.2rem; text-align: left; font: inherit; color: var(--text); cursor: pointer;
+    padding: 0.85rem 1rem; border-radius: 12px; background: var(--surface); border: 1px solid var(--line);
+  }
+  .modus[aria-pressed="true"] { border-color: var(--akzent-1); background: var(--surface-strong); }
+  .modus:disabled { opacity: 0.4; cursor: not-allowed; }
+  .modus .kopf { display: flex; align-items: center; gap: 0.5rem; font-weight: 600; font-size: 0.92rem; }
+  .modus span.unter { font-size: 0.78rem; color: var(--text-dim); }
+
+  /* ------------------------------------------------------------- Runde */
+  .buehne { max-width: 640px; margin: 0 auto; }
+  .fortschrittbalken { height: 4px; border-radius: 999px; background: var(--line-soft); overflow: hidden; margin-bottom: 1.4rem; }
+  .fortschrittbalken i { display: block; height: 100%; background: var(--accent); transition: width 0.3s ease; }
+
+  .karte {
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: clamp(1.4rem, 5vw, 2.4rem); text-align: center; min-height: 190px;
+    display: grid; align-content: center; gap: 0.8rem;
+  }
+  .karte .oben { font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); }
+  .karte .wort { font-size: clamp(1.5rem, 5.5vw, 2.1rem); font-weight: 600; letter-spacing: -0.02em; line-height: 1.25; }
+  .karte .loesung { font-size: 1.15rem; color: var(--akzent-2); font-weight: 500; }
+  .karte .hinweis { font-size: 0.85rem; color: var(--text-dim); }
+  .karte.richtig { border-color: rgba(52, 193, 127, 0.55); }
+  .karte.falsch { border-color: rgba(226, 90, 90, 0.55); }
+
+  .antwortfeld { display: flex; gap: 0.6rem; margin-top: 1.1rem; }
+  .antwortfeld input { flex: 1; }
+
+  .optionen { display: grid; gap: 0.6rem; margin-top: 1.1rem; }
+  .option {
+    font: inherit; font-size: 1rem; text-align: left; cursor: pointer; color: var(--text);
+    padding: 0.85rem 1.1rem; border-radius: 12px; background: var(--surface); border: 1px solid var(--line);
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  .option:hover:not(:disabled) { border-color: var(--line-strong); }
+  .option.gut { border-color: #34c17f; background: rgba(52, 193, 127, 0.12); }
+  .option.schlecht { border-color: #e25a5a; background: rgba(226, 90, 90, 0.12); }
+  .option:disabled { cursor: default; }
+
+  /* ------------------------------------------------------------ Satzbau */
+  .satzfeld {
+    min-height: 62px; display: flex; flex-wrap: wrap; gap: 0.45rem; align-items: flex-start;
+    padding: 0.7rem; margin-top: 1rem; border-radius: 12px;
+    border: 1px dashed var(--line-strong); background: var(--surface);
+  }
+  .steine { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-top: 0.8rem; justify-content: center; }
+  .stein {
+    font: inherit; font-size: 0.95rem; cursor: pointer; color: var(--text);
+    padding: 0.5rem 0.85rem; border-radius: 10px; background: var(--surface-strong); border: 1px solid var(--line);
+  }
+  .stein:hover { border-color: var(--line-strong); }
+  .stein.weg { visibility: hidden; }
+
+  /* ----------------------------------------------------------- Zuordnen */
+  .paare { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; margin-top: 1rem; }
+  .paar {
+    font: inherit; font-size: 0.9rem; cursor: pointer; color: var(--text); text-align: left;
+    padding: 0.75rem 0.9rem; border-radius: 10px; background: var(--surface); border: 1px solid var(--line);
+  }
+  .paar[aria-pressed="true"] { border-color: var(--akzent-1); background: var(--surface-strong); }
+  .paar.geloest { opacity: 0.35; cursor: default; border-color: #34c17f; }
+  .paar.daneben { border-color: #e25a5a; }
+
+  /* ------------------------------------------------------------ Steuern */
+  .steuern { display: flex; flex-wrap: wrap; gap: 0.6rem; justify-content: center; margin-top: 1.2rem; }
+  .zaehler { display: flex; gap: 1.2rem; justify-content: center; font-size: 0.82rem; color: var(--text-dim); margin-bottom: 0.9rem; }
+  .zaehler b { color: var(--text); font-variant-numeric: tabular-nums; }
+
+  .startleiste {
+    position: sticky; bottom: 0; z-index: 5; margin-top: 1.6rem;
+    padding: 0.9rem 1.1rem; border-radius: var(--radius);
+    background: var(--surface-strong); border: 1px solid var(--line-strong);
+    display: flex; flex-wrap: wrap; gap: 0.9rem; align-items: center; justify-content: space-between;
+    backdrop-filter: blur(8px);
+  }
+  .startleiste .info { font-size: 0.85rem; color: var(--text-soft); }
+  .startleiste .info b { color: var(--text); }
+
+  .fehlerzeile { display: flex; justify-content: space-between; gap: 1rem; padding: 0.5rem 0;
+    border-bottom: 1px solid var(--line-soft); font-size: 0.9rem; }
+  .fehlerzeile:last-child { border-bottom: none; }
+  .fehlerzeile span { color: var(--text-dim); }
+  .phase {
+    display: grid; gap: 0.1rem; width: 100%; padding: 0.6rem 0.8rem;
+    border-radius: 10px; background: var(--surface-strong); border: 1px solid var(--line);
+    text-align: left;
+  }
+  .phase b { font-size: 0.9rem; }
+  .phase span { font-size: 0.8rem; color: var(--text-dim); }
+  .phase .werte { font-variant-numeric: tabular-nums; color: var(--text-soft); }
+
+  /* ---------------------------------------------------------- Lernplan */
+  .planbox { margin-bottom: 1.6rem; }
+  .plankarte {
+    padding: 1.1rem 1.3rem; border-radius: var(--radius);
+    background: var(--accent-soft); border: 1px solid var(--line);
+    border-left: 3px solid var(--akzent-1);
+  }
+  .plankarte .kopf { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; }
+  .plankarte .kopf b {
+    font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--eyebrow); font-weight: 600;
+  }
+  .plankarte .satz { font-size: 1.25rem; font-weight: 600; letter-spacing: -0.02em; margin: 0.5rem 0 0.2rem; }
+  .plankarte .detail { font-size: 0.84rem; color: var(--text-soft); }
+  .plankarte .spur { height: 6px; border-radius: 999px; background: var(--line-soft); overflow: hidden; margin: 0.9rem 0 0.9rem; }
+  .plankarte .spur i { display: block; height: 100%; border-radius: 999px; background: var(--accent); transition: width 0.4s ease; }
+  .planform { display: grid; gap: 0.8rem; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); align-items: end; }
+  .wochentage { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+  .wochentage button {
+    width: 38px; height: 34px; border-radius: 9px; font: inherit; font-size: 0.8rem; cursor: pointer;
+    border: 1px solid var(--line); background: var(--input-bg); color: var(--text-dim);
+  }
+  .wochentage button[aria-pressed="true"] { background: var(--accent); border-color: transparent; color: #fff; font-weight: 600; }
+
+  .quelle { font-size: 0.78rem; color: var(--text-dim); margin-top: 2rem; text-align: center; }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <a class="brand" href="/app"><img src="/icons/logo.png" alt="" width="38" height="38"><span>Alena</span></a>
+    <div style="display:flex;align-items:center;gap:0.7rem">
+      <span class="tiny" id="saveState"></span>
+      <a class="btn btn-quiet btn-sm" href="/einstellungen">Einstellungen</a>
+      <a class="btn btn-quiet btn-sm" href="/app">Zurück</a>
+    </div>
+  </div>
+</header>
+
+<main class="wrap" style="padding-block:2rem 3rem">
+  <div class="msg" id="msg" role="status"></div>
+
+  <!-- ================================================== Auswahl ======= -->
+  <section id="start" style="padding:0">
+    <div class="section-head" style="margin-bottom:1.4rem">
+      <div class="eyebrow" id="wegweiser">Lernatelier</div>
+      <h2 id="fachTitel">Lernatelier</h2>
+      <p id="fachText">Fach wählen, Kapitel und Niveau bestimmen, auf Los drücken.</p>
+    </div>
+
+    <div class="abschnitt">
+      <h3>Fach</h3>
+      <p class="tiny">Jedes Fach bringt eigene Kapitel, Niveaus und Übungsarten mit.</p>
+      <div class="reihe" id="faecher"></div>
+      <div class="reihe" id="unterfaecher" style="margin-top:0.6rem"></div>
+    </div>
+
+    <div class="kennzahlen" id="kennzahlen"></div>
+
+    <div class="planbox" id="planbox"></div>
+
+    <div class="abschnitt">
+      <h3>Niveau</h3>
+      <p class="tiny">Mehrere möglich. Ohne Auswahl kommt alles dran.</p>
+      <div class="reihe" id="niveaus"></div>
+    </div>
+
+    <div class="abschnitt">
+      <h3>Kapitel</h3>
+      <p class="tiny" id="kapitelHinweis">Antippen zum Auswählen – so viele du willst.</p>
+      <div class="reihe" style="margin-bottom:0.9rem">
+        <button class="btn btn-quiet btn-sm" data-wahl="alle">Alle</button>
+        <button class="btn btn-quiet btn-sm" data-wahl="keine">Keine</button>
+        <button class="btn btn-quiet btn-sm" data-wahl="faellig">Nur fällige</button>
+        <button class="btn btn-quiet btn-sm" data-wahl="neu">Nur ungeübte</button>
+      </div>
+      <div class="kapitel" id="kapitel"></div>
+    </div>
+
+    <div class="abschnitt">
+      <h3>Übungsart</h3>
+      <p class="tiny">Was gerade nicht geht, ist ausgegraut – dafür reicht die Auswahl nicht.</p>
+      <div class="modi" id="modi"></div>
+    </div>
+
+    <div class="abschnitt">
+      <h3>Feineinstellung</h3>
+      <p class="tiny">Richtung und Länge der Runde.</p>
+      <div class="reihe" id="richtungen" style="margin-bottom:0.7rem"></div>
+      <div class="reihe" id="mengen"></div>
+    </div>
+
+    <div class="startleiste">
+      <div class="info" id="startInfo">Nichts gewählt.</div>
+      <button class="btn btn-primary" id="losBtn">Los</button>
+    </div>
+
+    <p class="quelle" id="quelle"></p>
+  </section>
+
+  <!-- ==================================================== Runde ======= -->
+  <section id="runde" hidden style="padding:0">
+    <div class="buehne">
+      <div class="zaehler">
+        <span>Frage <b id="zNr">1</b> / <b id="zVon">20</b></span>
+        <span>Richtig <b id="zRichtig">0</b></span>
+        <span id="zKapitel"></span>
+      </div>
+      <div class="fortschrittbalken"><i id="zBalken" style="width:0%"></i></div>
+      <div id="buehne"></div>
+      <div class="steuern" id="steuern"></div>
+      <div style="text-align:center;margin-top:1.4rem">
+        <button class="btn btn-quiet btn-sm" id="abbrechen">Runde beenden</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================= Auswertung ===== -->
+  <section id="ende" hidden style="padding:0">
+    <div class="buehne">
+      <div class="karte">
+        <div class="oben">Runde fertig</div>
+        <div class="wort" id="eQuote">0 %</div>
+        <div class="hinweis" id="eLob"></div>
+      </div>
+      <div class="kennzahlen" id="eZahlen" style="margin-top:1.2rem"></div>
+      <div id="eFehler" style="margin-top:1.2rem"></div>
+      <div class="steuern">
+        <button class="btn btn-primary" id="eNochmal">Fehler nochmals</button>
+        <button class="btn btn-quiet" id="eNeu">Neue Runde</button>
+        <button class="btn btn-quiet" id="eZurueck">Zur Auswahl</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap" style="display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap">
+    <span class="tiny">Alena · Lernatelier</span>
+    <span class="tiny">Französisch</span>
+  </div>
+</footer>
+
+<script src="/ambient.js" defer></script>
+<script type="module">
+import * as F from '/lern-faecher.js';
+import * as L from '/lern-core.js';
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
+  ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+/* Schweizer Schreibweise: 9'000 statt 9000 – wie im Dossier. */
+const chf = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '’').replace(/’/g, "'");
+
+const api = async (url, options = {}) => {
+  const res = await fetch(url, {
+    headers: { 'content-type': 'application/json' },
+    credentials: 'include',
+    ...options,
+    body: options.body ? JSON.stringify(options.body) : undefined,
+  });
+  const out = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(out.error || 'Fehler');
+  return out;
+};
+const flash = (t, kind = 'ok') => {
+  const el = $('msg'); el.textContent = t; el.className = `msg ${kind} show`;
+  setTimeout(() => el.classList.remove('show'), 6000);
+};
+
+/* --------------------------------------------------------------- Zustand */
+let fortschritt = L.leereFortschritt();
+let wahl = {
+  fach: 'franzoesisch', unterfach: 'wortschatz',
+  kapitel: [], niveaus: [], modus: 'stufen', richtung: 'fr-de', anzahl: 20,
+};
+let sitzung = null;
+let speichernTimer = null;
+
+/* Der geladene Stoff des aktuellen Unterfachs. */
+let KAPITEL = [], ALLE_ITEMS = [], NIVEAUS = [], FAELLE = [], UNTER = null;
+const geladen = new Map();
+
+async function ladeStoff() {
+  UNTER = F.findeUnterfach(wahl.fach, wahl.unterfach);
+  const schluessel = `${wahl.fach}/${UNTER.id}`;
+  if (!geladen.has(schluessel)) geladen.set(schluessel, await UNTER.laden());
+  const m = geladen.get(schluessel);
+  KAPITEL = m.KAPITEL; ALLE_ITEMS = m.ALLE_ITEMS; NIVEAUS = m.NIVEAUS;
+  FAELLE = m.FAELLE || [];
+  // Kapitel und Niveaus des vorherigen Fachs passen hier nicht mehr.
+  const kIds = new Set(KAPITEL.map((k) => k.id));
+  const nIds = new Set(NIVEAUS.map((n) => n.id));
+  wahl.kapitel = wahl.kapitel.filter((k) => kIds.has(k));
+  wahl.niveaus = wahl.niveaus.filter((n) => nIds.has(n));
+  if (!UNTER.modi.includes(wahl.modus)) wahl.modus = UNTER.modi[0];
+}
+
+const HEUTE = L.heuteISO();
+
+/* -------------------------------------------------------------- Speichern */
+function speichern() {
+  clearTimeout(speichernTimer);
+  $('saveState').textContent = 'Speichert …';
+  speichernTimer = setTimeout(async () => {
+    try {
+      fortschritt.wahl = { ...wahl };
+      merkeStand();
+      const out = await api('/api/data?app=lernen', { method: 'PUT', body: { data: fortschritt } });
+      fortschritt = out.data;
+      $('saveState').textContent = 'Gespeichert';
+      setTimeout(() => { $('saveState').textContent = ''; }, 1800);
+    } catch (err) {
+      $('saveState').textContent = '';
+      flash(err.message, 'error');
+    }
+  }, 700);
+}
+
+/** Den Stand des aktuellen Unterfachs im Konto festhalten. */
+function merkeStand() {
+  if (!ALLE_ITEMS.length) return;
+  const neu = L.zusammenfassung(ALLE_ITEMS, fortschritt, wahl, HEUTE);
+  const rest = (fortschritt.stand || [])
+    .filter((s) => !(s.fach === neu.fach && s.unterfach === neu.unterfach));
+  fortschritt.stand = [...rest, neu].slice(-10);
+}
+
+/* ------------------------------------------------------------- Vorlesen */
+let stimme = null;
+function sprich(text) {
+  if (!('speechSynthesis' in window) || !text) return;
+  try {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'fr-FR';
+    u.rate = 0.9;
+    stimme ||= speechSynthesis.getVoices().find((v) => v.lang?.startsWith('fr')) || null;
+    if (stimme) u.voice = stimme;
+    speechSynthesis.speak(u);
+  } catch { /* kein Ton – dann eben nicht */ }
+}
+if ('speechSynthesis' in window) {
+  speechSynthesis.onvoiceschanged = () => {
+    stimme = speechSynthesis.getVoices().find((v) => v.lang?.startsWith('fr')) || null;
+  };
+}
+const kannSprechen = () => 'speechSynthesis' in window;
+
+/* =============================================================== Lernplan */
+const WOCHENTAGE = [['Mo', 1], ['Di', 2], ['Mi', 3], ['Do', 4], ['Fr', 5], ['Sa', 6], ['So', 7]];
+
+function plan() {
+  return { ...L.leererPlan(), ...(fortschritt.plan || {}) };
+}
+
+/** Gilt der Plan für das gerade gewählte Unterfach? */
+const planPasst = (p) => p.aktiv && (!p.fach || (p.fach === wahl.fach && p.unterfach === wahl.unterfach));
+
+function zeichnePlan() {
+  const box = $('planbox');
+  const p = plan();
+
+  if (!planPasst(p)) {
+    box.innerHTML = `
+      <div class="plankarte">
+        <div class="kopf"><b>Lernplan</b></div>
+        <div class="satz">Bis wann willst du durch sein?</div>
+        <p class="detail" style="margin:0.3rem 0 0.9rem">
+          Alena rechnet aus, wie viel heute dran ist – und erhöht das Pensum von selbst,
+          wenn du einen Tag auslässt.
+        </p>
+        <button class="btn btn-primary btn-sm" data-plan="einrichten">Lernplan einrichten</button>
+      </div>`;
+  } else {
+    const items = gewaehlteWoerter().length ? gewaehlteWoerter() : ALLE_ITEMS;
+    const st = L.planStand(ALLE_ITEMS, fortschritt, p, HEUTE);
+    const anteil = st.noetig ? Math.min(100, Math.round((st.geuebt / st.noetig) * 100)) : 100;
+    box.innerHTML = `
+      <div class="plankarte">
+        <div class="kopf">
+          <b>Lernplan</b>
+          <span class="tiny">${p.ziel ? `Ziel: ${esc(datumLang(p.ziel))} · ${st.tage} Lerntage` : 'ohne Zieldatum'}</span>
+        </div>
+        <div class="satz">${esc(L.planText(st))}</div>
+        <span class="spur"><i style="width:${anteil}%"></i></span>
+        <p class="detail" style="margin:0">
+          ${st.offen} von ${ALLE_ITEMS.length} sitzen noch nicht · heute ${st.geuebt} geübt
+        </p>
+        <div class="opts" style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.9rem">
+          ${st.rest > 0 ? `<button class="btn btn-primary btn-sm" data-plan="pensum">Tagespensum starten (${st.rest})</button>` : ''}
+          <button class="btn btn-quiet btn-sm" data-plan="einrichten">Plan ändern</button>
+          <button class="btn btn-quiet btn-sm" data-plan="aus">Plan beenden</button>
+        </div>
+      </div>`;
+  }
+
+  box.querySelectorAll('[data-plan]').forEach((b) => b.addEventListener('click', () => {
+    const was = b.dataset.plan;
+    if (was === 'einrichten') return zeichnePlanform();
+    if (was === 'aus') {
+      fortschritt.plan = { ...plan(), aktiv: false };
+      speichern(); zeichnePlan(); return;
+    }
+    if (was === 'pensum') {
+      const st = L.planStand(ALLE_ITEMS, fortschritt, plan(), HEUTE);
+      const vorrat = L.fuerModus(gewaehlteWoerter(), wahl.modus);
+      const menge = Math.max(1, Math.min(st.rest, vorrat.length));
+      if (!vorrat.length) return flash('Für das Tagespensum ist kein Kapitel gewählt.', 'error');
+      starte(L.runde(vorrat, fortschritt, menge, Math.random, HEUTE));
+    }
+  }));
+}
+
+const datumLang = (iso) => {
+  const d = new Date(iso + 'T00:00:00Z');
+  return d.toLocaleDateString('de-CH', { day: '2-digit', month: 'long', year: 'numeric', timeZone: 'UTC' });
+};
+
+function zeichnePlanform() {
+  const p = plan();
+  const box = $('planbox');
+  const tage = new Set(p.wochentage);
+  box.innerHTML = `
+    <div class="plankarte">
+      <div class="kopf"><b>Lernplan</b><span class="tiny">${esc(F.wegweiser(wahl.fach, wahl.unterfach))}</span></div>
+      <div class="planform" style="margin-top:0.9rem">
+        <div class="field" style="margin:0">
+          <label for="planZiel">Bis wann?</label>
+          <input type="date" id="planZiel" value="${p.ziel || ''}" min="${HEUTE}">
+        </div>
+        <div class="field" style="margin:0">
+          <label for="planProTag">Mindestens pro Tag</label>
+          <input type="number" id="planProTag" min="5" max="200" step="5" value="${p.proTag}">
+        </div>
+        <div class="field" style="margin:0">
+          <label>An diesen Tagen</label>
+          <div class="wochentage" id="planTage">
+            ${WOCHENTAGE.map(([n, i]) =>
+              `<button type="button" data-tag="${i}" aria-pressed="${tage.has(i)}">${n}</button>`).join('')}
+          </div>
+        </div>
+      </div>
+      <div class="opts" style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:1rem">
+        <button class="btn btn-primary btn-sm" id="planSpeichern">Plan starten</button>
+        <button class="btn btn-quiet btn-sm" id="planAbbrechen">Abbrechen</button>
+      </div>
+    </div>`;
+
+  box.querySelectorAll('#planTage button').forEach((b) => b.addEventListener('click', () => {
+    b.setAttribute('aria-pressed', String(b.getAttribute('aria-pressed') !== 'true'));
+  }));
+  $('planAbbrechen').addEventListener('click', zeichnePlan);
+  $('planSpeichern').addEventListener('click', () => {
+    const gewaehlt = [...box.querySelectorAll('#planTage button[aria-pressed="true"]')]
+      .map((b) => Number(b.dataset.tag));
+    if (!gewaehlt.length) return flash('Wähle mindestens einen Wochentag.', 'error');
+    fortschritt.plan = {
+      aktiv: true,
+      fach: wahl.fach, unterfach: wahl.unterfach,
+      ziel: $('planZiel').value || null,
+      wochentage: gewaehlt,
+      proTag: Math.max(5, Number($('planProTag').value) || 20),
+    };
+    speichern();
+    zeichnePlan();
+    flash('Lernplan gestartet.');
+  });
+}
+
+/* ================================================================ Auswahl */
+const gewaehlteWoerter = () => L.auswahl(ALLE_ITEMS, wahl);
+
+function zeichneFaecher() {
+  const box = $('faecher');
+  box.innerHTML = '';
+  for (const f of F.FAECHER) {
+    const b = document.createElement('button');
+    b.className = 'chip2'; b.type = 'button'; b.dataset.fach = f.id;
+    b.setAttribute('aria-pressed', String(wahl.fach === f.id));
+    b.innerHTML = `<span class="punkt"></span>${f.icon} ${esc(f.name)}`;
+    b.addEventListener('click', async () => {
+      if (wahl.fach === f.id) return;
+      wahl.fach = f.id;
+      wahl.unterfach = f.unterfaecher[0].id;
+      await ladeStoff();
+      zeichneAlles();
+      speichern();
+    });
+    box.appendChild(b);
+  }
+
+  const unten = $('unterfaecher');
+  const fach = F.findeFach(wahl.fach);
+  unten.innerHTML = '';
+  unten.hidden = fach.unterfaecher.length < 2 && F.FAECHER.every((x) => x.unterfaecher.length < 2);
+  for (const u of fach.unterfaecher) {
+    const b = document.createElement('button');
+    b.className = 'chip2'; b.type = 'button'; b.dataset.unterfach = u.id;
+    b.setAttribute('aria-pressed', String(wahl.unterfach === u.id));
+    b.innerHTML = `<span class="punkt"></span>${esc(u.name)}`;
+    b.addEventListener('click', async () => {
+      if (wahl.unterfach === u.id) return;
+      wahl.unterfach = u.id;
+      await ladeStoff();
+      zeichneAlles();
+      speichern();
+    });
+    unten.appendChild(b);
+  }
+
+  $('wegweiser').textContent = `Lernatelier · ${F.wegweiser(wahl.fach, wahl.unterfach)}`;
+  $('fachTitel').textContent = UNTER.titel;
+  $('fachText').textContent = UNTER.beschreibung;
+  $('quelle').textContent =
+    `${UNTER.beschreibung} ${KAPITEL.length} Kapitel, ${ALLE_ITEMS.length} Einträge.`;
+}
+
+function zeichneNiveaus() {
+  const box = $('niveaus');
+  box.innerHTML = '';
+  for (const n of NIVEAUS) {
+    const anzahl = ALLE_ITEMS.filter((w) => w.niveau === n.id).length;
+    const b = document.createElement('button');
+    b.className = 'chip2'; b.type = 'button';
+    b.setAttribute('aria-pressed', String(wahl.niveaus.includes(n.id)));
+    b.title = n.beschreibung;
+    b.innerHTML = `<span class="punkt"></span>${esc(n.name)} <span class="tiny">${anzahl}</span>`;
+    b.addEventListener('click', () => {
+      wahl.niveaus = wahl.niveaus.includes(n.id)
+        ? wahl.niveaus.filter((x) => x !== n.id) : [...wahl.niveaus, n.id];
+      zeichneAlles();
+    });
+    box.appendChild(b);
+  }
+}
+
+function zeichneKapitel() {
+  const box = $('kapitel');
+  box.innerHTML = '';
+  for (const k of KAPITEL) {
+    const woerter = L.auswahl(ALLE_ITEMS, { kapitel: [k.id], niveaus: wahl.niveaus });
+    const s = L.stand(woerter, fortschritt, HEUTE);
+    const b = document.createElement('button');
+    b.className = 'kap'; b.type = 'button';
+    b.dataset.kapitel = k.id;
+    b.setAttribute('aria-pressed', String(wahl.kapitel.includes(k.id)));
+    b.disabled = woerter.length === 0;
+    if (woerter.length === 0) b.style.opacity = '0.35';
+    b.innerHTML = `
+      <span class="zeile1"><b>${esc(k.titel)}</b><span class="nr">${woerter.length}</span></span>
+      <span class="unter">${esc(k.deutsch)}</span>
+      <span class="balken"><i style="width:${s.anteil}%"></i></span>
+      <span class="unter">${s.gelernt ? `${s.gelernt} geübt · ${s.sitzt} sitzt${s.faellig ? ` · ${s.faellig} fällig` : ''}` : 'noch ungeübt'}</span>`;
+    b.addEventListener('click', () => {
+      wahl.kapitel = wahl.kapitel.includes(k.id)
+        ? wahl.kapitel.filter((x) => x !== k.id) : [...wahl.kapitel, k.id];
+      zeichneAlles();
+    });
+    box.appendChild(b);
+  }
+}
+
+function zeichneModi() {
+  const box = $('modi');
+  const moeglich = L.moegliche(gewaehlteWoerter(), UNTER.modi, FAELLE.length);
+  box.innerHTML = '';
+  for (const m of L.MODI.filter((x) => UNTER.modi.includes(x.id))) {
+    const geht = moeglich.includes(m.id) && (m.id !== 'hoeren' || kannSprechen());
+    const b = document.createElement('button');
+    b.className = 'modus'; b.type = 'button'; b.disabled = !geht;
+    b.setAttribute('aria-pressed', String(wahl.modus === m.id && geht));
+    b.innerHTML = `<span class="kopf">${m.icon} ${esc(m.name)}</span>
+      <span class="unter">${esc(geht ? m.text
+        : m.id === 'hoeren' ? 'Dieser Browser kann nicht vorlesen.'
+        : m.mehrwort ? 'Braucht Kapitel mit ganzen Wendungen.'
+        : m.faelle ? 'Für dieses Fach gibt es keine Fälle.'
+        : 'Zu wenige Einträge gewählt.')}</span>`;
+    b.addEventListener('click', () => { wahl.modus = m.id; zeichneAlles(); });
+    box.appendChild(b);
+  }
+  if (!moeglich.includes(wahl.modus) && moeglich.length) wahl.modus = moeglich[0];
+}
+
+function zeichneRichtungen() {
+  const box = $('richtungen');
+  const fest = ['satzbau', 'hoeren', 'grafik', 'stufen'].includes(wahl.modus);
+  box.innerHTML = '';
+  const name = { 'fr-de': `${UNTER.vorneName} → ${UNTER.hintenName}`,
+                 'de-fr': `${UNTER.hintenName} → ${UNTER.vorneName}`, misch: 'Gemischt' };
+  for (const r of L.RICHTUNGEN) {
+    const b = document.createElement('button');
+    b.className = 'chip2'; b.type = 'button'; b.disabled = fest;
+    b.setAttribute('aria-pressed', String(fest ? r.id === 'de-fr' : wahl.richtung === r.id));
+    if (fest) b.style.opacity = '0.5';
+    b.innerHTML = `<span class="punkt"></span>${esc(name[r.id])}`;
+    b.addEventListener('click', () => { wahl.richtung = r.id; zeichneAlles(); });
+    box.appendChild(b);
+  }
+
+  const mengen = $('mengen');
+  mengen.innerHTML = '';
+  for (const n of [10, 20, 30, 50]) {
+    const b = document.createElement('button');
+    b.className = 'chip2'; b.type = 'button';
+    b.setAttribute('aria-pressed', String(wahl.anzahl === n));
+    b.innerHTML = `<span class="punkt"></span>${n} Fragen`;
+    b.addEventListener('click', () => { wahl.anzahl = n; zeichneAlles(); });
+    mengen.appendChild(b);
+  }
+}
+
+function zeichneKennzahlen() {
+  const alles = L.stand(ALLE_ITEMS, fortschritt, HEUTE);
+  const anteil = L.prozent(ALLE_ITEMS, fortschritt);
+  const reif = ALLE_ITEMS.filter((i) => L.sitzt(fortschritt.karten[i.id])).length;
+  $('kennzahlen').innerHTML = `
+    <div class="stat"><b>${anteil} %</b><span>Lernstand</span></div>
+    <div class="stat"><b>${alles.gelernt}</b><span>von ${alles.gesamt} geübt</span></div>
+    <div class="stat"><b>${reif}</b><span>werden geschrieben</span></div>
+    <div class="stat"><b>${alles.faellig}</b><span>heute fällig</span></div>`;
+}
+
+function zeichneStartleiste() {
+  const w = L.fuerModus(gewaehlteWoerter(), wahl.modus);
+  const s = L.stand(w, fortschritt, HEUTE);
+  const modus = L.MODI.find((m) => m.id === wahl.modus);
+
+  if (wahl.modus === 'grafik') {
+    $('losBtn').disabled = FAELLE.length === 0;
+    $('startInfo').innerHTML = FAELLE.length
+      ? `<b>${FAELLE.length}</b> Fälle · Phasen in die richtige Reihenfolge bringen`
+      : 'Für dieses Fach gibt es keine Fälle.';
+  } else if (wahl.modus === 'stufen') {
+    // Im Aufbau zeigt die Leiste, wie viele Wörter auf welcher Stufe stehen.
+    const zaehler = L.STUFEN.map((st) => ({ st, n: 0 }));
+    for (const item of w) {
+      const nr = L.stufeFuer(fortschritt.karten[item.id]).nr;
+      zaehler[nr - 1].n += 1;
+    }
+    $('losBtn').disabled = w.length === 0;
+    $('startInfo').innerHTML = w.length === 0
+      ? 'Noch kein Kapitel gewählt.'
+      : `<b>${Math.min(wahl.anzahl, w.length)}</b> Fragen aus <b>${w.length}</b> Einträgen · `
+        + zaehler.map((z) => `${z.n}× ${esc(z.st.name.toLowerCase())}`).join(' · ');
+  } else {
+    $('losBtn').disabled = w.length === 0;
+    $('startInfo').innerHTML = w.length === 0
+      ? 'Noch kein Kapitel gewählt.'
+      : `<b>${w.length}</b> Einträge · <b>${Math.min(wahl.anzahl, w.length)}</b> Fragen ·
+         ${esc(modus?.name || '')}${s.faellig ? ` · ${s.faellig} fällig, die kommen zuerst` : ''}`;
+  }
+  $('kapitelHinweis').textContent = wahl.kapitel.length
+    ? `${wahl.kapitel.length} von ${KAPITEL.length} Kapiteln gewählt.`
+    : 'Antippen zum Auswählen – ohne Auswahl kommen alle Kapitel dran.';
+}
+
+function zeichneAlles() {
+  zeichneFaecher(); zeichnePlan(); zeichneNiveaus(); zeichneKapitel(); zeichneModi();
+  zeichneRichtungen(); zeichneKennzahlen(); zeichneStartleiste();
+}
+
+document.querySelectorAll('[data-wahl]').forEach((b) => b.addEventListener('click', () => {
+  const was = b.dataset.wahl;
+  if (was === 'alle') wahl.kapitel = KAPITEL.map((k) => k.id);
+  if (was === 'keine') wahl.kapitel = [];
+  if (was === 'faellig') {
+    wahl.kapitel = KAPITEL.filter((k) => {
+      const w = L.auswahl(ALLE_ITEMS, { kapitel: [k.id], niveaus: wahl.niveaus });
+      return L.stand(w, fortschritt, HEUTE).faellig > 0;
+    }).map((k) => k.id);
+    if (!wahl.kapitel.length) flash('Heute ist nichts zur Wiederholung fällig.', 'ok');
+  }
+  if (was === 'neu') {
+    wahl.kapitel = KAPITEL.filter((k) => {
+      const w = L.auswahl(ALLE_ITEMS, { kapitel: [k.id], niveaus: wahl.niveaus });
+      return L.stand(w, fortschritt, HEUTE).neu > 0;
+    }).map((k) => k.id);
+  }
+  zeichneAlles();
+}));
+
+/* ================================================================== Runde */
+function zeige(welche) {
+  for (const id of ['start', 'runde', 'ende']) $(id).hidden = id !== welche;
+  scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function starte(woerter) {
+  const material = gewaehlteWoerter();
+  const aufgaben = L.baueRunde(woerter, {
+    modus: wahl.modus, richtung: wahl.richtung, vorrat: material,
+    faelle: FAELLE, fortschritt,
+  });
+  if (!aufgaben.length) return flash('Damit lässt sich keine Runde bauen.', 'error');
+  sitzung = { aufgaben, i: 0, antworten: [], modus: wahl.modus, tippstufe: 0, beantwortet: false };
+  zeige('runde');
+  zeichneAufgabe();
+}
+
+$('losBtn').addEventListener('click', () => {
+  if (wahl.modus === 'grafik') { starte([]); speichern(); return; }
+  const w = L.fuerModus(gewaehlteWoerter(), wahl.modus);
+  if (!w.length) return;
+  starte(L.runde(w, fortschritt, wahl.anzahl, Math.random, HEUTE));
+  speichern();
+});
+
+$('abbrechen').addEventListener('click', () => beende(true));
+
+function kopfzeile() {
+  const s = sitzung;
+  const gesamt = s.aufgaben.length;
+  $('zNr').textContent = Math.min(s.i + 1, gesamt);
+  $('zVon').textContent = gesamt;
+  $('zRichtig').textContent = s.antworten.filter((a) => a.ergebnis !== 'falsch').length;
+  $('zBalken').style.width = `${Math.round((s.i / gesamt) * 100)}%`;
+  const a = s.aufgaben[s.i];
+  if (a?.modus === 'grafik') { $('zKapitel').textContent = a.fall.titel; return; }
+  const kapId = a?.wort?.kapitel || a?.paare?.[0]?.kapitel;
+  const kap = KAPITEL.find((k) => k.id === kapId);
+  $('zKapitel').textContent = a?.stufe
+    ? `Stufe ${a.stufe.nr}/${L.STUFEN.length} · ${a.stufe.name}`
+    : (kap ? kap.titel : '');
+}
+
+/** Ein Ergebnis verbuchen und zur nächsten Aufgabe. */
+function verbuche(wort, ergebnis) {
+  sitzung.antworten.push({ wort, ergebnis });
+  const karte = fortschritt.karten[wort.id];
+  fortschritt.karten[wort.id] = L.nachAntwort(karte, ergebnis !== 'falsch', HEUTE);
+  // Alle fünf Antworten sichern – wer mitten in der Runde schliesst,
+  // soll den Fortschritt nicht verlieren.
+  if (sitzung.antworten.length % 5 === 0) speichern();
+}
+
+function weiter() {
+  sitzung.i += 1;
+  sitzung.tippstufe = 0;
+  sitzung.beantwortet = false;
+  if (sitzung.i >= sitzung.aufgaben.length) return beende(false);
+  zeichneAufgabe();
+}
+
+function knopf(text, art, fn) {
+  const b = document.createElement('button');
+  b.className = `btn ${art}`; b.textContent = text;
+  b.addEventListener('click', fn);
+  return b;
+}
+
+function zeichneAufgabe() {
+  kopfzeile();
+  const a = sitzung.aufgaben[sitzung.i];
+  const buehne = $('buehne');
+  const steuern = $('steuern');
+  buehne.innerHTML = ''; steuern.innerHTML = '';
+
+  if (a.modus === 'grafik') return zeichneGrafik(a, buehne, steuern);
+  if (a.modus === 'zuordnen') return zeichneZuordnen(a, buehne, steuern);
+  if (a.modus === 'karteikarten') return zeichneKarteikarte(a, buehne, steuern);
+  if (a.modus === 'auswahl') return zeichneAuswahl(a, buehne, steuern);
+  if (a.modus === 'satzbau') return zeichneSatzbau(a, buehne, steuern);
+  return zeichneTippen(a, buehne, steuern);   // tippen und hoeren
+}
+
+/* ---------------------------------------------------------- Karteikarten */
+function zeichneKarteikarte(a, buehne, steuern) {
+  let offen = false;
+  const karte = document.createElement('div');
+  karte.className = 'karte';
+  const male = () => {
+    karte.innerHTML = `
+      <div class="oben">${esc(a.stufe ? `Stufe ${a.stufe.nr} · ${a.stufe.name}`
+        : a.richtung === 'fr-de' ? UNTER.vorneName : UNTER.hintenName)}</div>
+      <div class="wort">${esc(a.frage)}</div>
+      ${offen ? `<div class="loesung">${esc(a.loesung)}</div>`
+              : '<div class="hinweis">Antippen zum Umdrehen</div>'}`;
+  };
+  male();
+  karte.style.cursor = 'pointer';
+  karte.addEventListener('click', () => { offen = true; male(); zeichneKnoepfe(); });
+  buehne.appendChild(karte);
+
+  function zeichneKnoepfe() {
+    steuern.innerHTML = '';
+    if (!offen) {
+      steuern.appendChild(knopf('Umdrehen', 'btn-primary', () => { offen = true; male(); zeichneKnoepfe(); }));
+      if (a.sprechen) steuern.appendChild(knopf('🔊 Hören', 'btn-quiet', () => sprich(a.wort.sprich)));
+      return;
+    }
+    steuern.appendChild(knopf('Wusste ich nicht', 'btn-quiet', () => { verbuche(a.wort, 'falsch'); weiter(); }));
+    steuern.appendChild(knopf('Konnte ich', 'btn-primary', () => { verbuche(a.wort, 'richtig'); weiter(); }));
+    if (a.wort.sprich && kannSprechen()) steuern.appendChild(knopf('🔊', 'btn-quiet', () => sprich(a.wort.sprich)));
+  }
+  zeichneKnoepfe();
+}
+
+/* --------------------------------------------------------------- Auswahl */
+function zeichneAuswahl(a, buehne, steuern) {
+  const karte = document.createElement('div');
+  karte.className = 'karte';
+  karte.innerHTML = `
+    <div class="oben">${esc(a.stufe ? `Stufe ${a.stufe.nr} · ${a.stufe.name}`
+      : a.richtung === 'fr-de' ? UNTER.hintenName + ' gesucht' : UNTER.vorneName + ' gesucht')}</div>
+    <div class="wort">${esc(a.frage)}</div>
+    ${a.stufe ? `<div class="hinweis">${esc(a.stufe.text)}</div>` : ''}`;
+  buehne.appendChild(karte);
+
+  const box = document.createElement('div');
+  box.className = 'optionen';
+  for (const o of a.optionen) {
+    const b = document.createElement('button');
+    b.className = 'option'; b.type = 'button'; b.textContent = o;
+    b.addEventListener('click', () => {
+      if (sitzung.beantwortet) return;
+      sitzung.beantwortet = true;
+      const gut = L.normalisiere(o) === L.normalisiere(a.loesung);
+      box.querySelectorAll('.option').forEach((x) => {
+        x.disabled = true;
+        if (L.normalisiere(x.textContent) === L.normalisiere(a.loesung)) x.classList.add('gut');
+        else if (x === b) x.classList.add('schlecht');
+      });
+      karte.classList.add(gut ? 'richtig' : 'falsch');
+      verbuche(a.wort, gut ? 'richtig' : 'falsch');
+      if (a.richtung === 'de-fr' && kannSprechen()) sprich(a.loesung);
+      steuern.innerHTML = '';
+      steuern.appendChild(knopf('Weiter', 'btn-primary', weiter));
+    });
+    box.appendChild(b);
+  }
+  buehne.appendChild(box);
+  if (kannSprechen() && a.richtung === 'fr-de' && a.wort.sprich) {
+    steuern.appendChild(knopf('🔊 Vorlesen', 'btn-quiet', () => sprich(a.wort.sprich)));
+  }
+}
+
+/* ------------------------------------------------------- Tippen / Hören */
+function zeichneTippen(a, buehne, steuern) {
+  const hoeren = a.modus === 'hoeren';
+  const karte = document.createElement('div');
+  karte.className = 'karte';
+  karte.innerHTML = `
+    <div class="oben">${esc(hoeren ? 'Schreib auf, was du hörst'
+      : a.stufe ? `Stufe ${a.stufe.nr} · ${a.stufe.name}`
+      : a.richtung === 'fr-de' ? UNTER.hintenName + ' gesucht' : UNTER.vorneName + ' gesucht')}</div>
+    <div class="wort">${hoeren ? '🔊' : esc(a.frage)}</div>
+    <div class="hinweis" id="tippZeile"></div>`;
+  buehne.appendChild(karte);
+
+  const feld = document.createElement('div');
+  feld.className = 'antwortfeld';
+  feld.innerHTML = `<input type="text" id="antwort" autocomplete="off" autocapitalize="none"
+     spellcheck="false" placeholder="${esc(hoeren || a.richtung === 'de-fr' ? UNTER.vorneName + ' …' : UNTER.hintenName + ' …')}">`;
+  buehne.appendChild(feld);
+  const eingabe = feld.querySelector('input');
+  const pruefBtn = knopf('Prüfen', 'btn-primary', pruefen);
+  feld.appendChild(pruefBtn);
+  setTimeout(() => eingabe.focus(), 50);
+  eingabe.addEventListener('keydown', (e) => { if (e.key === 'Enter') pruefen(); });
+
+  if (hoeren) { sprich(a.loesung); steuern.appendChild(knopf('🔊 Nochmals', 'btn-quiet', () => sprich(a.loesung))); }
+  steuern.appendChild(knopf('Tipp', 'btn-quiet', () => {
+    sitzung.tippstufe = Math.min(3, sitzung.tippstufe + 1);
+    $('tippZeile').textContent = L.tipp(a.loesung, sitzung.tippstufe);
+  }));
+  steuern.appendChild(knopf('Weiss ich nicht', 'btn-quiet', () => {
+    if (sitzung.beantwortet) return;
+    sitzung.beantwortet = true;
+    verbuche(a.wort, 'falsch');
+    zeigeLoesung('falsch');
+  }));
+
+  function pruefen() {
+    if (sitzung.beantwortet) return;
+    const wert = eingabe.value.trim();
+    if (!wert) return;
+    sitzung.beantwortet = true;
+    let ergebnis = L.pruefe(wert, a.loesung);
+    // Ein Tipp war im Spiel – dann zählt es nur als „fast“.
+    if (ergebnis === 'richtig' && sitzung.tippstufe >= 2) ergebnis = 'fast';
+    verbuche(a.wort, ergebnis);
+    zeigeLoesung(ergebnis);
+  }
+
+  function zeigeLoesung(ergebnis) {
+    eingabe.disabled = true; pruefBtn.disabled = true;
+    karte.classList.add(ergebnis === 'falsch' ? 'falsch' : 'richtig');
+    $('tippZeile').innerHTML = ergebnis === 'richtig'
+      ? `<span style="color:#34c17f">Richtig.</span> ${esc(a.loesung)}`
+      : ergebnis === 'fast'
+        ? `<span style="color:#e8a13a">Fast.</span> Richtig wäre: <b>${esc(a.loesung)}</b>`
+        : `<span style="color:#e25a5a">Richtig wäre:</span> <b>${esc(a.loesung)}</b>`;
+    if ((hoeren || a.richtung === 'de-fr') && a.wort.sprich) sprich(a.wort.sprich);
+    steuern.innerHTML = '';
+    steuern.appendChild(knopf('Weiter', 'btn-primary', weiter));
+  }
+}
+
+/* --------------------------------------------------------------- Satzbau */
+function zeichneSatzbau(a, buehne, steuern) {
+  const karte = document.createElement('div');
+  karte.className = 'karte';
+  karte.innerHTML = `
+    <div class="oben">Setz die Wendung zusammen</div>
+    <div class="wort">${esc(a.frage)}</div>
+    <div class="hinweis" id="tippZeile"></div>`;
+  buehne.appendChild(karte);
+
+  const satz = document.createElement('div');
+  satz.className = 'satzfeld';
+  buehne.appendChild(satz);
+
+  const steineBox = document.createElement('div');
+  steineBox.className = 'steine';
+  buehne.appendChild(steineBox);
+
+  const gewaehlt = [];
+  a.steine.forEach((t, idx) => {
+    const b = document.createElement('button');
+    b.className = 'stein'; b.type = 'button'; b.textContent = t; b.dataset.idx = String(idx);
+    b.addEventListener('click', () => {
+      if (sitzung.beantwortet || b.classList.contains('weg')) return;
+      b.classList.add('weg');
+      gewaehlt.push({ text: t, quelle: b });
+      maleSatz();
+    });
+    steineBox.appendChild(b);
+  });
+
+  function maleSatz() {
+    satz.innerHTML = '';
+    gewaehlt.forEach((g, i) => {
+      const b = document.createElement('button');
+      b.className = 'stein'; b.type = 'button'; b.textContent = g.text;
+      b.addEventListener('click', () => {
+        if (sitzung.beantwortet) return;
+        g.quelle.classList.remove('weg');
+        gewaehlt.splice(i, 1); maleSatz();
+      });
+      satz.appendChild(b);
+    });
+    pruefBtn.disabled = gewaehlt.length === 0;
+  }
+
+  const pruefBtn = knopf('Prüfen', 'btn-primary', () => {
+    if (sitzung.beantwortet) return;
+    sitzung.beantwortet = true;
+    const gebaut = gewaehlt.map((g) => g.text).join(' ');
+    let ergebnis = L.pruefe(gebaut, a.loesung);
+    if (ergebnis === 'richtig' && sitzung.tippstufe >= 2) ergebnis = 'fast';
+    verbuche(a.wort, ergebnis);
+    karte.classList.add(ergebnis === 'falsch' ? 'falsch' : 'richtig');
+    $('tippZeile').innerHTML = ergebnis === 'falsch'
+      ? `<span style="color:#e25a5a">Richtig wäre:</span> <b>${esc(a.loesung)}</b>`
+      : `<span style="color:#34c17f">${ergebnis === 'fast' ? 'Fast.' : 'Richtig.'}</span> ${esc(a.loesung)}`;
+    if (a.wort.sprich) sprich(a.loesung);
+    steuern.innerHTML = '';
+    steuern.appendChild(knopf('Weiter', 'btn-primary', weiter));
+  });
+  pruefBtn.disabled = true;
+  steuern.appendChild(pruefBtn);
+  steuern.appendChild(knopf('Tipp', 'btn-quiet', () => {
+    sitzung.tippstufe = Math.min(3, sitzung.tippstufe + 1);
+    $('tippZeile').textContent = L.tipp(a.loesung, sitzung.tippstufe);
+  }));
+  steuern.appendChild(knopf('Weiss ich nicht', 'btn-quiet', () => {
+    if (sitzung.beantwortet) return;
+    sitzung.beantwortet = true;
+    verbuche(a.wort, 'falsch');
+    karte.classList.add('falsch');
+    $('tippZeile').innerHTML = `<span style="color:#e25a5a">Richtig wäre:</span> <b>${esc(a.loesung)}</b>`;
+    steuern.innerHTML = '';
+    steuern.appendChild(knopf('Weiter', 'btn-primary', weiter));
+  }));
+}
+
+/* ------------------------------------------------------- Vorsorgegrafik */
+function zeichneGrafik(a, buehne, steuern) {
+  const karte = document.createElement('div');
+  karte.className = 'karte';
+  karte.style.minHeight = 'auto';
+  karte.innerHTML = `
+    <div class="oben">Vorsorgegrafik</div>
+    <div class="wort" style="font-size:1.25rem">${esc(a.frage)}</div>
+    <div class="hinweis" id="tippZeile">${esc(a.aufgabe)}</div>`;
+  buehne.appendChild(karte);
+
+  const treppe = document.createElement('div');
+  treppe.className = 'satzfeld';
+  treppe.style.flexDirection = 'column';
+  buehne.appendChild(treppe);
+
+  const steineBox = document.createElement('div');
+  steineBox.className = 'steine';
+  buehne.appendChild(steineBox);
+
+  const gewaehlt = [];
+  a.steine.forEach((t) => {
+    const b = document.createElement('button');
+    b.className = 'stein'; b.type = 'button'; b.textContent = t;
+    b.addEventListener('click', () => {
+      if (sitzung.beantwortet || b.classList.contains('weg')) return;
+      b.classList.add('weg');
+      gewaehlt.push({ text: t, quelle: b });
+      maleTreppe();
+    });
+    steineBox.appendChild(b);
+  });
+
+  function maleTreppe() {
+    treppe.innerHTML = '';
+    gewaehlt.forEach((g, i) => {
+      const zeile = document.createElement('button');
+      zeile.className = 'stein';
+      zeile.type = 'button';
+      zeile.style.width = '100%';
+      zeile.style.textAlign = 'left';
+      zeile.textContent = `${i + 1}.  ${g.text}`;
+      zeile.addEventListener('click', () => {
+        if (sitzung.beantwortet) return;
+        g.quelle.classList.remove('weg');
+        gewaehlt.splice(i, 1); maleTreppe();
+      });
+      treppe.appendChild(zeile);
+    });
+    pruefBtn.disabled = gewaehlt.length !== a.reihenfolge.length;
+  }
+
+  /** Nach dem Prüfen die ganze Treppe mit Zahlen zeigen – das ist der Lernwert. */
+  function zeigeLoesung(richtig) {
+    treppe.innerHTML = '';
+    for (const p of a.phasen) {
+      const zeile = document.createElement('div');
+      zeile.className = 'phase';
+      zeile.innerHTML = `
+        <b>${esc(p.phase)}</b>
+        <span>${esc(p.bezeichnung)}</span>
+        <span class="werte">Total ${chf(p.total)} · Lücke ${chf(p.luecke)} · ${p.deckung} %</span>`;
+      treppe.appendChild(zeile);
+    }
+    steineBox.innerHTML = '';
+    karte.classList.add(richtig ? 'richtig' : 'falsch');
+    $('tippZeile').innerHTML = richtig
+      ? '<span style="color:#34c17f">Richtig – so läuft die Treppe.</span>'
+      : '<span style="color:#e25a5a">Nicht ganz. So ist die Reihenfolge:</span>';
+    steuern.innerHTML = '';
+    steuern.appendChild(knopf('Weiter', 'btn-primary', weiter));
+  }
+
+  const pruefBtn = knopf('Prüfen', 'btn-primary', () => {
+    if (sitzung.beantwortet) return;
+    sitzung.beantwortet = true;
+    const richtig = gewaehlt.map((g) => g.text).join('|') === a.reihenfolge.join('|');
+    // Fälle sind keine Karteikarten – sie zählen nur für die Bilanz der Runde.
+    sitzung.antworten.push({ wort: { id: a.fall.id, vorne: a.fall.titel, hinten: a.reihenfolge.join(' → ') },
+                             ergebnis: richtig ? 'richtig' : 'falsch', ohneKarte: true });
+    zeigeLoesung(richtig);
+  });
+  pruefBtn.disabled = true;
+  steuern.appendChild(pruefBtn);
+  steuern.appendChild(knopf('Weiss ich nicht', 'btn-quiet', () => {
+    if (sitzung.beantwortet) return;
+    sitzung.beantwortet = true;
+    sitzung.antworten.push({ wort: { id: a.fall.id, vorne: a.fall.titel, hinten: a.reihenfolge.join(' → ') },
+                             ergebnis: 'falsch', ohneKarte: true });
+    zeigeLoesung(false);
+  }));
+}
+
+/* -------------------------------------------------------------- Zuordnen */
+function zeichneZuordnen(a, buehne, steuern) {
+  const karte = document.createElement('div');
+  karte.className = 'karte';
+  karte.style.minHeight = 'auto';
+  karte.innerHTML = `<div class="oben">Zusammengehörendes verbinden</div>
+    <div class="hinweis" id="zuHinweis">Links ${esc(UNTER.vorneName.toLowerCase())}, rechts ${esc(UNTER.hintenName.toLowerCase())}.</div>`;
+  buehne.appendChild(karte);
+
+  const gitter = document.createElement('div');
+  gitter.className = 'paare';
+  buehne.appendChild(gitter);
+
+  const links = document.createElement('div');
+  const rechts = document.createElement('div');
+  links.style.display = rechts.style.display = 'grid';
+  links.style.gap = rechts.style.gap = '0.6rem';
+  gitter.append(links, rechts);
+
+  let offenLinks = null, geloest = 0;
+
+  const mach = (wort, seite, text) => {
+    const b = document.createElement('button');
+    b.className = 'paar'; b.type = 'button'; b.textContent = text;
+    b.dataset.wort = wort.id;
+    b.setAttribute('aria-pressed', 'false');
+    b.addEventListener('click', () => {
+      if (b.classList.contains('geloest')) return;
+      if (seite === 'links') {
+        links.querySelectorAll('.paar').forEach((x) => x.setAttribute('aria-pressed', 'false'));
+        offenLinks = b; b.setAttribute('aria-pressed', 'true');
+        return;
+      }
+      if (!offenLinks) return;
+      const treffer = offenLinks.dataset.wort === b.dataset.wort;
+      const wortObj = a.paare.find((p) => p.id === offenLinks.dataset.wort);
+      if (treffer) {
+        offenLinks.classList.add('geloest'); b.classList.add('geloest');
+        offenLinks.setAttribute('aria-pressed', 'false');
+        verbuche(wortObj, 'richtig');
+        geloest++;
+        if (wortObj.sprich) sprich(wortObj.sprich);
+        if (geloest === a.paare.length) {
+          $('zuHinweis').innerHTML = '<span style="color:#34c17f">Alle verbunden.</span>';
+          steuern.innerHTML = '';
+          steuern.appendChild(knopf('Weiter', 'btn-primary', weiter));
+        }
+      } else {
+        b.classList.add('daneben');
+        setTimeout(() => b.classList.remove('daneben'), 500);
+        verbuche(wortObj, 'falsch');
+      }
+      offenLinks = null;
+    });
+    return b;
+  };
+
+  a.links.forEach((w) => links.appendChild(mach(w, 'links', w.vorne)));
+  a.rechts.forEach((w) => rechts.appendChild(mach(w, 'rechts', w.hinten)));
+  steuern.appendChild(knopf('Überspringen', 'btn-quiet', weiter));
+}
+
+/* ------------------------------------------------------------ Auswertung */
+function beende(abgebrochen) {
+  const b = L.bilanz(sitzung.antworten);
+  if (b.gesamt) {
+    fortschritt.sitzungen = [...(fortschritt.sitzungen || []), {
+      datum: HEUTE, modus: sitzung.modus,
+      kapitel: [...new Set(sitzung.antworten.map((a) => a.wort.kapitel).filter(Boolean))],
+      gesamt: b.gesamt, richtig: b.richtig, quote: b.quote,
+    }].slice(-50);
+  }
+  speichern();
+
+  if (abgebrochen && !b.gesamt) { zeige('start'); zeichneAlles(); return; }
+
+  $('eQuote').textContent = `${b.quote} %`;
+  $('eLob').textContent = L.lob(b.quote);
+  $('eZahlen').innerHTML = `
+    <div class="stat"><b>${b.richtig}</b><span>richtig</span></div>
+    <div class="stat"><b>${b.fast}</b><span>fast</span></div>
+    <div class="stat"><b>${b.falsch}</b><span>daneben</span></div>
+    <div class="stat"><b>${b.gesamt}</b><span>Fragen</span></div>`;
+
+  const fehler = sitzung.antworten.filter((a) => a.ergebnis !== 'richtig');
+  const einmalig = [...new Map(fehler.map((a) => [a.wort.id, a.wort])).values()];
+  $('eFehler').innerHTML = einmalig.length
+    ? `<div class="card"><h3 style="margin:0 0 0.7rem;font-size:1rem">Das war noch wacklig</h3>
+       ${einmalig.map((w) => `<div class="fehlerzeile"><span>${esc(w.vorne)}</span><b>${esc(w.hinten)}</b></div>`).join('')}</div>`
+    : '';
+  $('eNochmal').hidden = einmalig.length === 0;
+  $('eNochmal').onclick = () => starte(einmalig);
+  zeige('ende');
+}
+
+$('eNeu').addEventListener('click', () => {
+  if (wahl.modus === 'grafik') return starte([]);
+  const w = L.fuerModus(gewaehlteWoerter(), wahl.modus);
+  if (w.length) starte(L.runde(w, fortschritt, wahl.anzahl, Math.random, HEUTE));
+});
+$('eZurueck').addEventListener('click', () => { zeige('start'); zeichneAlles(); });
+
+/* ------------------------------------------------------------------ Start */
+(async () => {
+  try {
+    const me = await fetch('/api/auth?do=me', { credentials: 'include' }).then((r) => r.json());
+    if (!me.user) return void (location.href = '/');
+    if (!me.user.modules?.lernatelier) {
+      document.querySelector('main').innerHTML =
+        '<div class="card"><h3>Nicht freigeschaltet</h3><p>Das Lernatelier ist für dein Konto noch nicht offen. Der Host kann es freigeben.</p></div>';
+      return;
+    }
+  } catch { /* offline – dann eben ohne Konto weiterarbeiten */ }
+
+  try {
+    const out = await api('/api/data?app=lernen');
+    fortschritt = { ...L.leereFortschritt(), ...out.data };
+    fortschritt.karten ||= {};
+    if (fortschritt.wahl) wahl = { ...wahl, ...fortschritt.wahl };
+  } catch (err) { flash(err.message, 'error'); }
+
+  try {
+    await ladeStoff();
+  } catch (err) {
+    flash('Der Lernstoff liess sich nicht laden: ' + err.message, 'error');
+    return;
+  }
+  zeichneAlles();
+})();
+</script>
+</body>
+</html>
