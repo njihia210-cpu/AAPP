@@ -1,0 +1,753 @@
+<!doctype html>
+<html lang="de" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rezeptbuch – Alena</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0d0a22">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/favicon.png" sizes="32x32">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Alena">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="/styles.css">
+<script src="/theme.js"></script>
+<style>
+  .kennzahlen { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 0.7rem; margin-bottom: 1.4rem; }
+
+  .zeile { display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center; }
+  .zeile input[type="search"] { flex: 1; min-width: 180px; }
+
+  /* --------------------------------------------------------- Rezeptliste */
+  .rezepte { display: grid; gap: 0.9rem; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+  .rezept {
+    display: grid; text-align: left; font: inherit; color: var(--text); cursor: pointer;
+    border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line);
+    overflow: hidden; transition: border-color 0.16s ease;
+  }
+  .rezept:hover { border-color: var(--line-strong); }
+  .rezept .bild {
+    aspect-ratio: 16 / 10; background: var(--input-bg); background-size: cover; background-position: center;
+    display: grid; place-items: center; font-size: 2rem; color: var(--text-dim);
+  }
+  .rezept .text { padding: 0.85rem 1rem; display: grid; gap: 0.25rem; }
+  .rezept b { font-size: 0.98rem; font-weight: 600; }
+  .rezept .unter { font-size: 0.78rem; color: var(--text-dim); }
+  .rezept .stern { color: var(--akzent-2); }
+
+  .abschnitt { padding: 0; margin-bottom: 1.8rem; }
+  .abschnitt > h3 { margin: 0 0 0.8rem; font-size: 1rem; font-weight: 600; }
+  .leer { padding: 3rem 1rem; text-align: center; color: var(--text-dim); font-size: 0.95rem; }
+
+  /* -------------------------------------------------------------- Editor */
+  .paar { display: grid; grid-template-columns: 80px 96px 1fr auto; gap: 0.5rem; align-items: center; }
+  @media (max-width: 560px) { .paar { grid-template-columns: 70px 80px 1fr auto; } }
+  .schrittzeile { display: grid; grid-template-columns: 28px 1fr 92px auto; gap: 0.5rem; align-items: start; }
+  .schrittzeile .nr {
+    width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center;
+    background: var(--accent-soft); font-size: 0.8rem; font-weight: 600; margin-top: 0.4rem;
+  }
+  .weg {
+    width: 34px; height: 34px; border-radius: 9px; cursor: pointer; font: inherit;
+    border: 1px solid var(--line); background: var(--input-bg); color: var(--text-dim);
+  }
+  .weg:hover { color: #e25a5a; border-color: rgba(226, 90, 90, 0.5); }
+  .liste { display: grid; gap: 0.5rem; margin-bottom: 0.7rem; }
+
+  .bildwahl { display: flex; gap: 0.9rem; align-items: center; flex-wrap: wrap; }
+  .vorschau {
+    width: 120px; aspect-ratio: 16 / 10; border-radius: 12px; background: var(--input-bg);
+    border: 1px solid var(--line); background-size: cover; background-position: center;
+    display: grid; place-items: center; font-size: 1.4rem; color: var(--text-dim);
+  }
+
+  /* ----------------------------------------------------------- Kochmodus */
+  .kochen {
+    position: fixed; inset: 0; z-index: 60; background: var(--bg);
+    display: grid; grid-template-rows: auto 1fr auto; padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+  }
+  .kochkopf {
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    padding: 0.9rem clamp(1rem, 4vw, 2rem); border-bottom: 1px solid var(--line);
+  }
+  .kochkopf b { font-size: 0.95rem; font-weight: 600; }
+  .kochkopf .tiny { color: var(--text-dim); }
+  .kochinhalt {
+    overflow-y: auto; padding: clamp(1.2rem, 5vw, 2.5rem) clamp(1rem, 4vw, 2rem);
+    display: grid; align-content: start; gap: 1.2rem; max-width: 720px; width: 100%; margin: 0 auto;
+  }
+  .kochinhalt .stufe { font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--eyebrow); }
+  .kochinhalt .gross { font-size: clamp(1.35rem, 4.5vw, 2rem); font-weight: 600; line-height: 1.45; letter-spacing: -0.02em; }
+  .kochzutat {
+    display: flex; gap: 0.8rem; align-items: center; padding: 0.7rem 0.9rem;
+    border-radius: 12px; background: var(--surface); border: 1px solid var(--line);
+    cursor: pointer; font: inherit; color: var(--text); text-align: left; width: 100%;
+  }
+  .kochzutat[aria-pressed="true"] { opacity: 0.45; text-decoration: line-through; }
+  .kochzutat .menge { min-width: 84px; font-variant-numeric: tabular-nums; color: var(--akzent-2); font-weight: 600; }
+  .kochfuss {
+    display: flex; gap: 0.7rem; align-items: center; justify-content: space-between;
+    padding: 0.9rem clamp(1rem, 4vw, 2rem); border-top: 1px solid var(--line);
+  }
+  .kochbalken { height: 4px; background: var(--line-soft); }
+  .kochbalken i { display: block; height: 100%; background: var(--accent); transition: width 0.3s ease; }
+  .portionen { display: flex; gap: 0.4rem; align-items: center; }
+  .portionen button {
+    width: 34px; height: 34px; border-radius: 9px; cursor: pointer; font: inherit; font-size: 1.1rem;
+    border: 1px solid var(--line); background: var(--input-bg); color: var(--text);
+  }
+  .wecker { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--akzent-2); }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <a class="brand" href="/app"><img src="/icons/logo.png" alt="" width="38" height="38"><span>Alena</span></a>
+    <div style="display:flex;align-items:center;gap:0.7rem">
+      <span class="tiny" id="saveState"></span>
+      <a class="btn btn-quiet btn-sm" href="/einstellungen">Einstellungen</a>
+      <a class="btn btn-quiet btn-sm" href="/app">Zurück</a>
+    </div>
+  </div>
+</header>
+
+<main class="wrap" style="padding-block:2rem 3rem">
+  <div class="section-head" style="margin-bottom:1.4rem">
+    <div class="eyebrow">Rezeptbuch</div>
+    <h2>Was kochst du?</h2>
+    <p>Zutaten und Schritte einmal erfassen – beim nächsten Mal führt dich der Kochmodus durch.</p>
+  </div>
+
+  <div class="msg" id="msg" role="status"></div>
+  <div class="kennzahlen" id="kennzahlen"></div>
+
+  <!-- ==================================================== Liste ======== -->
+  <section id="liste" style="padding:0">
+    <div class="zeile" style="margin-bottom:1.4rem">
+      <input type="search" id="suche" placeholder="Suchen – Titel, Zutat oder Schritt" autocomplete="off">
+      <select id="sortierung" style="width:auto"></select>
+      <button class="btn btn-primary" id="neuBtn">Neues Rezept</button>
+    </div>
+    <div id="bereiche"></div>
+  </section>
+
+  <!-- =================================================== Editor ======== -->
+  <section id="editor" hidden style="padding:0">
+    <div class="card">
+      <div class="zeile" style="justify-content:space-between;margin-bottom:1.2rem">
+        <h3 style="margin:0;font-size:1.1rem" id="editorTitel">Neues Rezept</h3>
+        <button class="btn btn-quiet btn-sm" id="editorZurueck">Zurück zur Liste</button>
+      </div>
+
+      <div class="field">
+        <label for="eTitel">Titel</label>
+        <input type="text" id="eTitel" maxlength="160" placeholder="z.B. Älplermagronen">
+      </div>
+
+      <div class="row" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:0.8rem">
+        <div class="field"><label for="eKategorie">Kategorie</label><select id="eKategorie"></select></div>
+        <div class="field"><label for="ePortionen">Portionen</label><input type="number" id="ePortionen" min="1" max="99" value="2"></div>
+        <div class="field"><label for="eDauer">Dauer in Minuten</label><input type="number" id="eDauer" min="0" max="6000" step="5" placeholder="optional"></div>
+      </div>
+
+      <div class="field">
+        <label>Foto</label>
+        <div class="bildwahl">
+          <div class="vorschau" id="eVorschau">🍲</div>
+          <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+            <input type="file" id="eBildDatei" accept="image/*" hidden>
+            <button class="btn btn-quiet btn-sm" type="button" id="eBildWaehlen">Foto wählen</button>
+            <button class="btn btn-quiet btn-sm" type="button" id="eBildWeg" hidden>Foto entfernen</button>
+          </div>
+        </div>
+        <p class="tiny" style="margin:0.5rem 0 0">
+          Wird auf 900 Pixel verkleinert und im Konto gespeichert – ein Bild pro Rezept.
+        </p>
+      </div>
+
+      <h4 style="margin:1.6rem 0 0.7rem;font-size:0.95rem">Zutaten</h4>
+      <div class="liste" id="eZutaten"></div>
+      <button class="btn btn-quiet btn-sm" type="button" id="eZutatPlus">Zutat hinzufügen</button>
+
+      <h4 style="margin:1.6rem 0 0.7rem;font-size:0.95rem">Schritte</h4>
+      <div class="liste" id="eSchritte"></div>
+      <button class="btn btn-quiet btn-sm" type="button" id="eSchrittPlus">Schritt hinzufügen</button>
+
+      <div class="field" style="margin-top:1.6rem">
+        <label for="eNotiz">Notiz</label>
+        <textarea id="eNotiz" rows="3" maxlength="1000" placeholder="Woher das Rezept kommt, was du beim letzten Mal geändert hast …"></textarea>
+      </div>
+
+      <div class="zeile" style="margin-top:1.2rem">
+        <button class="btn btn-primary" id="eSpeichern">Speichern</button>
+        <button class="btn btn-quiet" id="eLoeschen" hidden>Rezept löschen</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ==================================================== Kochmodus ====== -->
+<div class="kochen" id="kochen" hidden>
+  <div>
+    <div class="kochkopf">
+      <div>
+        <b id="kTitel"></b>
+        <div class="tiny" id="kUnter"></div>
+      </div>
+      <button class="btn btn-quiet btn-sm" id="kSchliessen">Beenden</button>
+    </div>
+    <div class="kochbalken"><i id="kBalken" style="width:0%"></i></div>
+  </div>
+  <div class="kochinhalt" id="kInhalt"></div>
+  <div class="kochfuss">
+    <button class="btn btn-quiet" id="kZurueck">Zurück</button>
+    <span class="tiny" id="kWecker"></span>
+    <button class="btn btn-primary" id="kWeiter">Weiter</button>
+  </div>
+</div>
+
+<footer>
+  <div class="wrap" style="display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap">
+    <span class="tiny">Alena · Rezeptbuch</span>
+    <a class="tiny" href="/app">← Alle Apps</a>
+  </div>
+</footer>
+
+<script src="/ambient.js" defer></script>
+<script type="module">
+import * as R from '/rezept-core.js';
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
+  ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+const api = async (url, options = {}) => {
+  const res = await fetch(url, {
+    headers: { 'content-type': 'application/json' }, credentials: 'include',
+    ...options, body: options.body ? JSON.stringify(options.body) : undefined,
+  });
+  const out = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(out.error || 'Fehler');
+  return out;
+};
+const flash = (t, kind = 'ok') => {
+  const el = $('msg'); el.textContent = t; el.className = `msg ${kind} show`;
+  el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  setTimeout(() => el.classList.remove('show'), 6000);
+};
+
+let buch = R.leeresBuch();
+let bilder = R.leereBilder();
+let bilderGeladen = false;
+let entwurf = null;          // das Rezept im Editor
+let entwurfBild = null;      // null = unverändert, '' = entfernen, sonst neues Bild
+let speichernTimer = null;
+const kennung = () => Math.random().toString(16).slice(2, 10);
+
+/* ------------------------------------------------------------- Speichern */
+function speichern({ auchBilder = false } = {}) {
+  clearTimeout(speichernTimer);
+  $('saveState').textContent = 'Speichert …';
+  speichernTimer = setTimeout(async () => {
+    try {
+      const out = await api('/api/data?app=rezepte', { method: 'PUT', body: { data: buch } });
+      buch = out.data;
+      if (auchBilder) {
+        const b = await api('/api/data?app=rezeptbilder', { method: 'PUT', body: { data: bilder } });
+        bilder = b.data;
+      }
+      $('saveState').textContent = 'Gespeichert';
+      setTimeout(() => { $('saveState').textContent = ''; }, 1800);
+      zeichne();
+    } catch (err) {
+      $('saveState').textContent = '';
+      flash(err.message, 'error');
+    }
+  }, 500);
+}
+
+/** Bilder erst laden, wenn sie gebraucht werden – die Liste soll schnell sein. */
+async function ladeBilder() {
+  if (bilderGeladen) return;
+  try {
+    const out = await api('/api/data?app=rezeptbilder');
+    bilder = out.data || R.leereBilder();
+    bilderGeladen = true;
+    zeichne();
+  } catch { /* ohne Bilder geht es auch */ }
+}
+
+/* --------------------------------------------------------------- Ansicht */
+function zeige(welche) {
+  $('liste').hidden = welche !== 'liste';
+  $('editor').hidden = welche !== 'editor';
+  scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function zeichneKennzahlen() {
+  const z = R.zahlen(buch);
+  $('kennzahlen').innerHTML = `
+    <div class="stat"><b>${z.gesamt}</b><span>Rezepte</span></div>
+    <div class="stat"><b>${z.favoriten}</b><span>Favoriten</span></div>
+    <div class="stat"><b>${z.mitBild}</b><span>mit Foto</span></div>
+    <div class="stat"><b>${z.gekocht}</b><span>Mal gekocht</span></div>`;
+}
+
+function karte(r) {
+  const b = document.createElement('button');
+  b.className = 'rezept'; b.type = 'button'; b.dataset.id = r.id;
+  const bild = bilder.bilder?.[r.id];
+  const dauer = R.dauerText(R.gesamtdauer(r));
+  b.innerHTML = `
+    <span class="bild" ${bild ? `style="background-image:url('${bild}')"` : ''}>${bild ? '' : '🍲'}</span>
+    <span class="text">
+      <b>${r.favorit ? '<span class="stern">★</span> ' : ''}${esc(r.titel)}</b>
+      <span class="unter">${esc(R.kategorieName(r.kategorie))} · ${r.portionen} Portionen${dauer ? ` · ${esc(dauer)}` : ''}</span>
+      <span class="unter">${(r.zutaten || []).length} Zutaten · ${(r.schritte || []).length} Schritte${r.gekocht ? ` · ${r.gekocht}× gekocht` : ''}</span>
+    </span>`;
+  b.addEventListener('click', () => oeffne(r.id));
+  return b;
+}
+
+function zeichneListe() {
+  const box = $('bereiche');
+  box.innerHTML = '';
+  const a = R.abschnitte(buch, { suche: $('suche').value, sortierung: buch.sortierung || 'neu' });
+
+  if (!a.gesamt) {
+    box.innerHTML = buch.rezepte.length
+      ? '<div class="leer">Nichts gefunden.</div>'
+      : '<div class="leer">Noch kein Rezept. Trag oben dein erstes ein – Zutaten und Schritte reichen.</div>';
+    return;
+  }
+
+  const teil = (titel, liste) => {
+    if (!liste.length) return;
+    const el = document.createElement('div');
+    el.className = 'abschnitt';
+    el.innerHTML = `<h3>${esc(titel)} <span class="tiny">${liste.length}</span></h3>`;
+    const gitter = document.createElement('div');
+    gitter.className = 'rezepte';
+    liste.forEach((r) => gitter.appendChild(karte(r)));
+    el.appendChild(gitter);
+    box.appendChild(el);
+  };
+  teil('★ Favoriten', a.favoriten);
+  teil(a.favoriten.length ? 'Weitere Rezepte' : 'Alle Rezepte', a.uebrige);
+}
+
+function zeichne() {
+  zeichneKennzahlen();
+  if ($('liste').hidden === false) zeichneListe();
+}
+
+/* ---------------------------------------------------------------- Editor */
+function leeresRezept() {
+  return {
+    id: kennung(), titel: '', kategorie: 'hauptgang', portionen: 2, dauerMin: 0,
+    notiz: '', zutaten: [{ menge: '', einheit: '', name: '' }], schritte: [{ text: '', dauerMin: 0 }],
+    favorit: false, gekocht: 0, createdAt: new Date().toISOString(),
+  };
+}
+
+function oeffne(id) {
+  const r = buch.rezepte.find((x) => x.id === id);
+  if (!r) return;
+  zeigeDetail(r);
+}
+
+function zeichneZutaten() {
+  const box = $('eZutaten');
+  box.innerHTML = '';
+  entwurf.zutaten.forEach((z, i) => {
+    const zeile = document.createElement('div');
+    zeile.className = 'paar';
+    zeile.innerHTML = `
+      <input type="text" value="${esc(z.menge || '')}" placeholder="200" aria-label="Menge">
+      <select aria-label="Einheit">${R.EINHEITEN.map((e) =>
+        `<option value="${esc(e)}" ${e === (z.einheit || '') ? 'selected' : ''}>${esc(e || '–')}</option>`).join('')}</select>
+      <input type="text" value="${esc(z.name || '')}" placeholder="Zutat" aria-label="Zutat">
+      <button class="weg" type="button" aria-label="Zutat entfernen">✕</button>`;
+    const [menge, einheit, name] = zeile.querySelectorAll('input, select');
+    menge.addEventListener('input', () => { z.menge = menge.value; });
+    einheit.addEventListener('change', () => { z.einheit = einheit.value; });
+    name.addEventListener('input', () => { z.name = name.value; });
+    zeile.querySelector('.weg').addEventListener('click', () => {
+      entwurf.zutaten.splice(i, 1);
+      if (!entwurf.zutaten.length) entwurf.zutaten.push({ menge: '', einheit: '', name: '' });
+      zeichneZutaten();
+    });
+    box.appendChild(zeile);
+  });
+}
+
+function zeichneSchritte() {
+  const box = $('eSchritte');
+  box.innerHTML = '';
+  entwurf.schritte.forEach((s, i) => {
+    const zeile = document.createElement('div');
+    zeile.className = 'schrittzeile';
+    zeile.innerHTML = `
+      <span class="nr">${i + 1}</span>
+      <textarea rows="2" placeholder="Was ist zu tun?" aria-label="Schritt ${i + 1}">${esc(s.text || '')}</textarea>
+      <input type="number" min="0" max="2000" value="${s.dauerMin || ''}" placeholder="Min." aria-label="Dauer in Minuten">
+      <button class="weg" type="button" aria-label="Schritt entfernen">✕</button>`;
+    const text = zeile.querySelector('textarea');
+    const dauer = zeile.querySelector('input');
+    text.addEventListener('input', () => { s.text = text.value; });
+    dauer.addEventListener('input', () => { s.dauerMin = Number(dauer.value) || 0; });
+    zeile.querySelector('.weg').addEventListener('click', () => {
+      entwurf.schritte.splice(i, 1);
+      if (!entwurf.schritte.length) entwurf.schritte.push({ text: '', dauerMin: 0 });
+      zeichneSchritte();
+    });
+    box.appendChild(zeile);
+  });
+}
+
+function zeichneVorschau() {
+  const v = $('eVorschau');
+  const bild = entwurfBild === '' ? null
+    : (entwurfBild || bilder.bilder?.[entwurf.id] || null);
+  v.style.backgroundImage = bild ? `url('${bild}')` : '';
+  v.textContent = bild ? '' : '🍲';
+  $('eBildWeg').hidden = !bild;
+}
+
+function bearbeite(r) {
+  entwurf = JSON.parse(JSON.stringify(r));
+  entwurf.zutaten = entwurf.zutaten?.length ? entwurf.zutaten : [{ menge: '', einheit: '', name: '' }];
+  entwurf.schritte = entwurf.schritte?.length ? entwurf.schritte : [{ text: '', dauerMin: 0 }];
+  entwurfBild = null;
+
+  $('editorTitel').textContent = buch.rezepte.some((x) => x.id === r.id) ? 'Rezept bearbeiten' : 'Neues Rezept';
+  $('eTitel').value = entwurf.titel || '';
+  $('eKategorie').innerHTML = R.KATEGORIEN.map((k) =>
+    `<option value="${k.id}" ${k.id === entwurf.kategorie ? 'selected' : ''}>${esc(k.name)}</option>`).join('');
+  $('ePortionen').value = entwurf.portionen || 2;
+  $('eDauer').value = entwurf.dauerMin || '';
+  $('eNotiz').value = entwurf.notiz || '';
+  $('eLoeschen').hidden = !buch.rezepte.some((x) => x.id === r.id);
+  zeichneZutaten(); zeichneSchritte(); zeichneVorschau();
+  zeige('editor');
+}
+
+$('neuBtn').addEventListener('click', () => bearbeite(leeresRezept()));
+$('editorZurueck').addEventListener('click', () => { zeige('liste'); zeichne(); });
+$('eZutatPlus').addEventListener('click', () => {
+  entwurf.zutaten.push({ menge: '', einheit: '', name: '' }); zeichneZutaten();
+});
+$('eSchrittPlus').addEventListener('click', () => {
+  entwurf.schritte.push({ text: '', dauerMin: 0 }); zeichneSchritte();
+});
+
+/* Bild verkleinern, bevor es ins Konto wandert. */
+$('eBildWaehlen').addEventListener('click', () => $('eBildDatei').click());
+$('eBildWeg').addEventListener('click', () => { entwurfBild = ''; zeichneVorschau(); });
+$('eBildDatei').addEventListener('change', async (ev) => {
+  const datei = ev.target.files?.[0];
+  if (!datei) return;
+  try {
+    entwurfBild = await verkleinere(datei);
+    zeichneVorschau();
+  } catch (err) { flash('Das Bild liess sich nicht lesen: ' + err.message, 'error'); }
+  ev.target.value = '';
+});
+
+function verkleinere(datei, kante = 900, guete = 0.72) {
+  return new Promise((fertig, fehler) => {
+    const leser = new FileReader();
+    leser.onerror = () => fehler(new Error('Datei nicht lesbar'));
+    leser.onload = () => {
+      const bild = new Image();
+      bild.onerror = () => fehler(new Error('Kein gültiges Bild'));
+      bild.onload = () => {
+        const faktor = Math.min(1, kante / Math.max(bild.width, bild.height));
+        const c = document.createElement('canvas');
+        c.width = Math.round(bild.width * faktor);
+        c.height = Math.round(bild.height * faktor);
+        c.getContext('2d').drawImage(bild, 0, 0, c.width, c.height);
+        let daten = c.toDataURL('image/jpeg', guete);
+        // Notfalls noch einmal kleiner – der Speicher hat eine Grenze.
+        if (daten.length > 380000) daten = c.toDataURL('image/jpeg', 0.5);
+        fertig(daten);
+      };
+      bild.src = leser.result;
+    };
+    leser.readAsDataURL(datei);
+  });
+}
+
+$('eSpeichern').addEventListener('click', () => {
+  entwurf.titel = $('eTitel').value.trim();
+  if (!entwurf.titel) return flash('Das Rezept braucht einen Titel.', 'error');
+  entwurf.kategorie = $('eKategorie').value;
+  entwurf.portionen = Math.max(1, Number($('ePortionen').value) || 2);
+  entwurf.dauerMin = Number($('eDauer').value) || 0;
+  entwurf.notiz = $('eNotiz').value.trim();
+  entwurf.zutaten = entwurf.zutaten.filter((z) => z.name?.trim());
+  entwurf.schritte = entwurf.schritte.filter((s) => s.text?.trim());
+
+  bilder.bilder ||= {};
+  if (entwurfBild === '') { delete bilder.bilder[entwurf.id]; entwurf.bild = false; }
+  else if (entwurfBild) { bilder.bilder[entwurf.id] = entwurfBild; entwurf.bild = true; }
+  entwurf.bild = Boolean(bilder.bilder[entwurf.id]);
+
+  const i = buch.rezepte.findIndex((x) => x.id === entwurf.id);
+  if (i >= 0) buch.rezepte[i] = entwurf; else buch.rezepte.unshift(entwurf);
+
+  speichern({ auchBilder: entwurfBild !== null });
+  zeige('liste');
+  flash('Rezept gespeichert.');
+});
+
+$('eLoeschen').addEventListener('click', () => {
+  if (!confirm(`„${entwurf.titel}“ wirklich löschen?`)) return;
+  buch.rezepte = buch.rezepte.filter((x) => x.id !== entwurf.id);
+  if (bilder.bilder?.[entwurf.id]) { delete bilder.bilder[entwurf.id]; speichern({ auchBilder: true }); }
+  else speichern();
+  zeige('liste');
+  flash('Rezept gelöscht.');
+});
+
+/* ------------------------------------------------------------ Detail */
+function zeigeDetail(r) {
+  const bild = bilder.bilder?.[r.id];
+  const dauer = R.dauerText(R.gesamtdauer(r));
+  const box = $('bereiche');
+  zeige('liste');
+  box.innerHTML = `
+    <div class="card">
+      <div class="zeile" style="justify-content:space-between;margin-bottom:1rem">
+        <h3 style="margin:0;font-size:1.3rem;letter-spacing:-0.02em">${esc(r.titel)}</h3>
+        <button class="btn btn-quiet btn-sm" data-tun="liste">Zurück</button>
+      </div>
+      ${bild ? `<div class="bild" style="aspect-ratio:16/9;border-radius:12px;background:url('${bild}') center/cover;margin-bottom:1.1rem"></div>` : ''}
+      <p class="tiny" style="margin:0 0 1.2rem">
+        ${esc(R.kategorieName(r.kategorie))} · ${r.portionen} Portionen${dauer ? ` · ${esc(dauer)}` : ''}${r.gekocht ? ` · ${r.gekocht}× gekocht` : ''}
+      </p>
+      ${r.notiz ? `<p style="margin:0 0 1.2rem;color:var(--text-soft)">${esc(r.notiz)}</p>` : ''}
+
+      <h4 style="margin:0 0 0.6rem;font-size:0.95rem">Zutaten</h4>
+      <div class="liste">${(r.zutaten || []).map((z) =>
+        `<div class="fehlerzeile" style="display:flex;justify-content:space-between;gap:1rem;padding:0.45rem 0;border-bottom:1px solid var(--line-soft);font-size:0.92rem">
+           <span>${esc(z.name)}</span>
+           <b style="color:var(--akzent-2)">${esc([z.menge, z.einheit].filter(Boolean).join(' '))}</b>
+         </div>`).join('') || '<p class="tiny" style="margin:0">Keine Zutaten erfasst.</p>'}</div>
+
+      <h4 style="margin:1.4rem 0 0.6rem;font-size:0.95rem">Schritte</h4>
+      <ol style="margin:0;padding-left:1.2rem;display:grid;gap:0.6rem">
+        ${(r.schritte || []).map((s) =>
+          `<li>${esc(s.text)}${s.dauerMin ? ` <span class="tiny">(${esc(R.dauerText(s.dauerMin))})</span>` : ''}</li>`).join('')
+          || '<p class="tiny" style="margin:0">Keine Schritte erfasst.</p>'}
+      </ol>
+
+      <div class="zeile" style="margin-top:1.6rem">
+        <button class="btn btn-primary" data-tun="kochen">Kochmodus starten</button>
+        <button class="btn btn-quiet" data-tun="bearbeiten">Bearbeiten</button>
+        <button class="btn btn-quiet" data-tun="favorit">${r.favorit ? '★ Favorit entfernen' : '☆ Zu Favoriten'}</button>
+      </div>
+    </div>`;
+
+  box.querySelectorAll('[data-tun]').forEach((b) => b.addEventListener('click', () => {
+    const was = b.dataset.tun;
+    if (was === 'liste') { zeichne(); return; }
+    if (was === 'bearbeiten') return bearbeite(r);
+    if (was === 'kochen') return starteKochen(r);
+    if (was === 'favorit') {
+      r.favorit = !r.favorit;
+      speichern();
+      zeigeDetail(r);
+    }
+  }));
+}
+
+/* --------------------------------------------------------- Kochmodus */
+let koch = null;
+let wachhalter = null;
+let weckerTakt = null;
+
+async function halteWach() {
+  try { wachhalter = await navigator.wakeLock?.request('screen'); } catch { /* geht nicht überall */ }
+}
+function lasseLos() {
+  try { wachhalter?.release?.(); } catch {}
+  wachhalter = null;
+  clearInterval(weckerTakt); weckerTakt = null;
+}
+
+function starteKochen(r) {
+  koch = { rezept: r, portionen: r.portionen || 2, i: 0, abgehakt: new Set() };
+  $('kochen').hidden = false;
+  document.body.style.overflow = 'hidden';
+  halteWach();
+  zeichneKochen();
+}
+
+function beendeKochen(gekocht) {
+  $('kochen').hidden = true;
+  document.body.style.overflow = '';
+  lasseLos();
+  if (gekocht && koch) {
+    const r = buch.rezepte.find((x) => x.id === koch.rezept.id);
+    if (r) {
+      r.gekocht = (r.gekocht || 0) + 1;
+      r.zuletztGekocht = new Date().toISOString().slice(0, 10);
+      speichern();
+      flash(`„${r.titel}“ als gekocht vermerkt.`);
+    }
+  }
+  koch = null;
+  zeichne();
+}
+
+function zeichneKochen() {
+  const seiten = R.kochSeiten(koch.rezept, koch.portionen);
+  const seite = seiten[koch.i];
+  $('kTitel').textContent = koch.rezept.titel;
+  $('kUnter').textContent = `${koch.portionen} Portionen`;
+  $('kBalken').style.width = `${Math.round((koch.i / (seiten.length - 1)) * 100)}%`;
+  $('kZurueck').disabled = koch.i === 0;
+  $('kWeiter').textContent = koch.i >= seiten.length - 1 ? 'Fertig' : 'Weiter';
+  $('kWecker').textContent = '';
+  clearInterval(weckerTakt); weckerTakt = null;
+
+  const box = $('kInhalt');
+  box.innerHTML = '';
+
+  if (seite.art === 'zutaten') {
+    const kopf = document.createElement('div');
+    kopf.innerHTML = `
+      <div class="stufe">Vorbereiten</div>
+      <div class="gross" style="margin-top:0.3rem">Zutaten</div>`;
+    box.appendChild(kopf);
+
+    const portionen = document.createElement('div');
+    portionen.className = 'portionen';
+    portionen.innerHTML = `
+      <button type="button" data-p="-1" aria-label="weniger Portionen">−</button>
+      <span style="min-width:120px;text-align:center">${koch.portionen} Portionen</span>
+      <button type="button" data-p="1" aria-label="mehr Portionen">+</button>`;
+    portionen.querySelectorAll('[data-p]').forEach((b) => b.addEventListener('click', () => {
+      koch.portionen = Math.max(1, Math.min(99, koch.portionen + Number(b.dataset.p)));
+      zeichneKochen();
+    }));
+    box.appendChild(portionen);
+
+    for (const z of seite.zutaten) {
+      const b = document.createElement('button');
+      b.className = 'kochzutat'; b.type = 'button';
+      const schluessel = z.name;
+      b.setAttribute('aria-pressed', String(koch.abgehakt.has(schluessel)));
+      b.innerHTML = `<span class="menge">${esc([z.menge, z.einheit].filter(Boolean).join(' ') || '–')}</span>
+                     <span>${esc(z.name)}</span>`;
+      b.addEventListener('click', () => {
+        if (koch.abgehakt.has(schluessel)) koch.abgehakt.delete(schluessel);
+        else koch.abgehakt.add(schluessel);
+        b.setAttribute('aria-pressed', String(koch.abgehakt.has(schluessel)));
+      });
+      box.appendChild(b);
+    }
+    if (!seite.zutaten.length) {
+      box.insertAdjacentHTML('beforeend', '<p class="tiny">Für dieses Rezept sind keine Zutaten erfasst.</p>');
+    }
+    return;
+  }
+
+  if (seite.art === 'fertig') {
+    box.innerHTML = `
+      <div class="stufe">Fertig</div>
+      <div class="gross">Guten Appetit.</div>
+      <p class="tiny" style="margin:0">Mit „Fertig“ zählt Alena das Rezept als gekocht.</p>`;
+    return;
+  }
+
+  box.innerHTML = `
+    <div class="stufe">Schritt ${seite.nr} von ${seite.von}</div>
+    <div class="gross">${esc(seite.text)}</div>`;
+
+  if (seite.dauerMin) {
+    const knopf = document.createElement('button');
+    knopf.className = 'btn btn-quiet';
+    knopf.style.justifySelf = 'start';
+    knopf.textContent = `⏱ ${R.dauerText(seite.dauerMin)} stellen`;
+    knopf.addEventListener('click', () => starteWecker(seite.dauerMin * 60));
+    box.appendChild(knopf);
+  }
+}
+
+function starteWecker(sekunden) {
+  clearInterval(weckerTakt);
+  let rest = sekunden;
+  const zeigen = () => {
+    const m = String(Math.floor(rest / 60)).padStart(2, '0');
+    const s = String(rest % 60).padStart(2, '0');
+    $('kWecker').innerHTML = `<span class="wecker">⏱ ${m}:${s}</span>`;
+  };
+  zeigen();
+  weckerTakt = setInterval(() => {
+    rest -= 1;
+    if (rest <= 0) {
+      clearInterval(weckerTakt); weckerTakt = null;
+      $('kWecker').innerHTML = '<span class="wecker">⏱ Zeit ist um</span>';
+      try { navigator.vibrate?.([300, 120, 300]); } catch {}
+      return;
+    }
+    zeigen();
+  }, 1000);
+}
+
+$('kWeiter').addEventListener('click', () => {
+  const seiten = R.kochSeiten(koch.rezept, koch.portionen);
+  if (koch.i >= seiten.length - 1) return beendeKochen(true);
+  koch.i += 1; zeichneKochen();
+});
+$('kZurueck').addEventListener('click', () => { koch.i = Math.max(0, koch.i - 1); zeichneKochen(); });
+$('kSchliessen').addEventListener('click', () => beendeKochen(false));
+document.addEventListener('keydown', (e) => {
+  if ($('kochen').hidden) return;
+  if (e.key === 'ArrowRight') $('kWeiter').click();
+  if (e.key === 'ArrowLeft') $('kZurueck').click();
+  if (e.key === 'Escape') beendeKochen(false);
+});
+
+/* ------------------------------------------------------------- Steuerung */
+$('suche').addEventListener('input', zeichneListe);
+$('sortierung').innerHTML = R.SORTIERUNGEN.map((s) =>
+  `<option value="${s.id}">${esc(s.label)}</option>`).join('');
+$('sortierung').addEventListener('change', () => {
+  buch.sortierung = $('sortierung').value;
+  speichern();
+  zeichneListe();
+});
+
+/* ------------------------------------------------------------------ Start */
+(async () => {
+  try {
+    const me = await fetch('/api/auth?do=me', { credentials: 'include' }).then((r) => r.json());
+    if (!me.user) return void (location.href = '/');
+    if (!me.user.modules?.rezepte) {
+      document.querySelector('main').innerHTML =
+        '<div class="card"><h3>Nicht freigeschaltet</h3><p>Das Rezeptbuch ist für dein Konto noch nicht offen. Der Host kann es freigeben.</p></div>';
+      return;
+    }
+  } catch { /* offline – dann eben ohne Konto */ }
+
+  try {
+    const out = await api('/api/data?app=rezepte');
+    buch = { ...R.leeresBuch(), ...out.data };
+    buch.rezepte ||= [];
+    $('sortierung').value = buch.sortierung || 'neu';
+  } catch (err) { flash(err.message, 'error'); }
+
+  zeichne();
+  ladeBilder();
+})();
+</script>
+</body>
+</html>
