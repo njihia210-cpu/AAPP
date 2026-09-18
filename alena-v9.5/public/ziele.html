@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="de" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ziele – Alena</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0d0a22">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/favicon.png" sizes="32x32">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Alena">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="/styles.css">
+<script src="/theme.js"></script>
+<style>
+  .cols { display: grid; gap: 1.2rem; grid-template-columns: minmax(0, 380px) minmax(0, 1fr); align-items: start; }
+  @media (max-width: 900px) { .cols { grid-template-columns: 1fr; } }
+
+  /* --------------------------------------------------------- Zielliste */
+  .zielliste { display: grid; gap: 0.7rem; }
+  .ziel {
+    width: 100%; text-align: left; font: inherit; color: var(--text); cursor: pointer;
+    padding: 1rem 1.1rem; border-radius: var(--radius);
+    background: var(--surface); border: 1px solid var(--line);
+    transition: border-color 0.18s ease, background 0.18s ease;
+    display: grid; gap: 0.6rem;
+  }
+  .ziel:hover { border-color: var(--line-strong); }
+  .ziel[aria-current="true"] { border-color: var(--akzent-1); background: var(--surface-strong); }
+  .ziel.fertig { opacity: 0.6; }
+  .ziel .kopf { display: flex; gap: 0.7rem; align-items: flex-start; justify-content: space-between; }
+  .ziel .kopf b { font-size: 1rem; font-weight: 600; letter-spacing: -0.01em; }
+  .ziel .stand { font-size: 0.82rem; color: var(--text-dim); }
+
+  /* ----------------------------------------------------------- Anzeige */
+  .balken { height: 7px; border-radius: 999px; background: var(--line-soft); overflow: hidden; }
+  .balken i { display: block; height: 100%; border-radius: 999px; background: var(--accent); transition: width 0.35s ease; }
+
+  .marke {
+    display: inline-flex; align-items: center; gap: 0.35rem; flex: none;
+    padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.72rem; font-weight: 600;
+    letter-spacing: 0.03em; border: 1px solid var(--line); color: var(--text-dim);
+    white-space: nowrap;
+  }
+  .marke::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .marke.aktiv { color: var(--akzent-2); border-color: var(--line-strong); }
+  .marke.warten { color: #e8a13a; border-color: rgba(232, 161, 58, 0.4); }
+  .marke.gut { color: #34c17f; border-color: rgba(52, 193, 127, 0.4); }
+  .marke.aus { color: var(--text-dim); opacity: 0.7; }
+
+  /* ------------------------------------------------------------ Detail */
+  .leer { padding: 3rem 1rem; text-align: center; color: var(--text-dim); font-size: 0.95rem; }
+
+  .schritte { display: grid; gap: 0.5rem; margin-top: 0.6rem; }
+  .schritt {
+    display: flex; gap: 0.7rem; align-items: center;
+    padding: 0.7rem 0.9rem; border-radius: 12px;
+    background: var(--input-bg); border: 1px solid var(--line);
+  }
+  .schritt .titel { flex: 1; font-size: 0.94rem; min-width: 0; }
+  .schritt.erledigt .titel { text-decoration: line-through; color: var(--text-dim); }
+  .schritt.verworfen .titel { color: var(--text-dim); opacity: 0.6; }
+  .haken {
+    flex: none; width: 24px; height: 24px; border-radius: 8px; cursor: pointer;
+    border: 1px solid var(--line-strong); background: none; color: transparent;
+    display: grid; place-items: center; font-size: 0.85rem; padding: 0;
+    transition: all 0.15s ease;
+  }
+  .haken:hover { border-color: var(--akzent-1); }
+  .haken.an { background: var(--accent); border-color: transparent; color: #fff; }
+
+  .wahl {
+    font: inherit; font-size: 0.8rem; padding: 0.3rem 0.5rem; border-radius: 9px;
+    background: var(--input-bg); border: 1px solid var(--line); color: var(--text-soft);
+    width: auto; cursor: pointer;
+  }
+
+  .zeile { display: flex; gap: 0.5rem; align-items: center; }
+  .zeile input[type="text"] { flex: 1; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
+  @media (max-width: 520px) { .row { grid-template-columns: 1fr; } }
+
+  .kennzahlen { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 0.7rem; margin-bottom: 1.2rem; }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <a class="brand" href="/app"><img src="/icons/logo.png" alt="" width="38" height="38"><span>Alena</span></a>
+    <div style="display:flex;align-items:center;gap:0.7rem">
+      <span class="tiny" id="saveState"></span>
+      <a class="btn btn-quiet btn-sm" href="/einstellungen">Einstellungen</a>
+      <a class="btn btn-quiet btn-sm" href="/app">Zurück</a>
+    </div>
+  </div>
+</header>
+
+<main class="wrap" style="padding-block:2rem 3rem">
+  <div class="section-head" style="margin-bottom:1.4rem">
+    <div class="eyebrow">Ziele</div>
+    <h2>Woran du dran bist</h2>
+    <p>Ein Ziel anklicken, um Schritte zu ergänzen und den Stand zu setzen.</p>
+  </div>
+
+  <div class="msg" id="msg" role="status"></div>
+
+  <div class="kennzahlen" id="kennzahlen"></div>
+
+  <div class="cols">
+    <!-- ----------------------------------------------------------- Liste -->
+    <div>
+      <div class="card" style="margin-bottom:1rem">
+        <h3 style="margin:0 0 0.9rem;font-size:1.05rem">Neues Ziel</h3>
+        <div class="zeile">
+          <input type="text" id="neuTitel" placeholder="Was willst du erreichen?" maxlength="160">
+          <button class="btn btn-primary btn-sm" id="neuBtn">Anlegen</button>
+        </div>
+      </div>
+
+      <div class="zielliste" id="zielliste"></div>
+    </div>
+
+    <!-- ---------------------------------------------------------- Detail -->
+    <div class="card" id="detail">
+      <div class="leer">Wähle links ein Ziel aus.</div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-bottom" style="margin-top:0;border-top:none">
+      <a class="tiny" href="/app">← Alle Apps</a>
+      <div class="theme-switch" role="group" aria-label="Darstellung">
+        <button type="button" data-theme-btn="dark">Dunkel</button>
+        <button type="button" data-theme-btn="light">Hell</button>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="/ambient.js" defer></script>
+<script type="module">
+import { STATUS, statusLabel, fortschritt, standText, abgeschlossen, leereZiele } from '/ziele-core.js';
+
+const $ = (id) => document.getElementById(id);
+const api = async (url, options = {}) => {
+  const res = await fetch(url, {
+    headers: { 'content-type': 'application/json' },
+    ...options,
+    body: options.body ? JSON.stringify(options.body) : undefined,
+  });
+  const out = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(out.error || 'Fehler');
+  return out;
+};
+const flash = (t, kind = 'ok') => {
+  const el = $('msg'); el.textContent = t; el.className = `msg ${kind} show`;
+  setTimeout(() => el.classList.remove('show'), 6000);
+};
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
+  ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const fmt = (iso) => iso ? new Date(iso + 'T12:00:00').toLocaleDateString('de-CH',
+  { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+const kennung = () => Math.random().toString(16).slice(2, 10);
+const ton = (id) => STATUS.find((s) => s.id === id)?.ton || 'neutral';
+
+let daten = leereZiele();
+let gewaehlt = null;
+let timer = null;
+
+/* ------------------------------------------------------------ Speichern */
+function merken() {
+  $('saveState').textContent = 'Speichert …';
+  clearTimeout(timer);
+  timer = setTimeout(async () => {
+    try {
+      const out = await api('/api/data?app=ziele', { method: 'PUT', body: { data: daten } });
+      daten = out.data;
+      $('saveState').textContent = 'Gespeichert';
+      setTimeout(() => { $('saveState').textContent = ''; }, 1800);
+      zeichne();
+    } catch (err) {
+      $('saveState').textContent = '';
+      flash(err.message, 'error');
+    }
+  }, 600);
+}
+
+const zielVon = (id) => daten.goals.find((z) => z.id === id) || null;
+
+/* ------------------------------------------------------------ Neues Ziel */
+function anlegen() {
+  const titel = $('neuTitel').value.trim();
+  if (!titel) return flash('Bitte einen Titel eingeben.', 'error');
+  const ziel = {
+    id: kennung(), titel, status: 'offen', schritte: [],
+    createdAt: new Date().toISOString(),
+  };
+  daten.goals.unshift(ziel);
+  gewaehlt = ziel.id;
+  $('neuTitel').value = '';
+  merken();
+  zeichne();
+}
+$('neuBtn').addEventListener('click', anlegen);
+$('neuTitel').addEventListener('keydown', (e) => { if (e.key === 'Enter') anlegen(); });
+
+/* --------------------------------------------------------------- Zeichnen */
+function zeichneKennzahlen() {
+  const g = daten.goals;
+  const offen = g.filter((z) => !abgeschlossen(z)).length;
+  const geschafft = g.filter((z) => z.status === 'geschafft').length;
+  const schritte = g.reduce((n, z) => n + (z.schritte || []).length, 0);
+  const erledigt = g.reduce((n, z) => n + (z.schritte || []).filter((s) => s.status === 'geschafft').length, 0);
+
+  $('kennzahlen').innerHTML = `
+    <div class="stat"><b>${g.length}</b><span>Ziele</span></div>
+    <div class="stat"><b>${offen}</b><span>offen</span></div>
+    <div class="stat"><b>${geschafft}</b><span>geschafft</span></div>
+    <div class="stat"><b>${erledigt} / ${schritte}</b><span>Schritte</span></div>`;
+}
+
+function zeichneListe() {
+  const box = $('zielliste');
+  if (!daten.goals.length) {
+    box.innerHTML = '<div class="leer">Noch kein Ziel. Trag oben eines ein.</div>';
+    return;
+  }
+  box.innerHTML = '';
+  for (const z of daten.goals) {
+    const f = fortschritt(z);
+    const el = document.createElement('button');
+    el.type = 'button';
+    el.className = 'ziel' + (abgeschlossen(z) ? ' fertig' : '');
+    el.setAttribute('aria-current', String(z.id === gewaehlt));
+    el.innerHTML = `
+      <div class="kopf">
+        <b>${esc(z.titel)}</b>
+        <span class="marke ${ton(z.status)}">${esc(statusLabel(z.status))}</span>
+      </div>
+      <div class="balken"><i style="width:${Math.round(f.anteil * 100)}%"></i></div>
+      <div class="stand">${esc(standText(z))}${z.faellig ? ' · bis ' + esc(fmt(z.faellig)) : ''}</div>`;
+    el.addEventListener('click', () => { gewaehlt = z.id; zeichne(); });
+    box.appendChild(el);
+  }
+}
+
+function zeichneDetail() {
+  const box = $('detail');
+  const z = zielVon(gewaehlt);
+  if (!z) {
+    box.innerHTML = '<div class="leer">Wähle links ein Ziel aus.</div>';
+    return;
+  }
+  const f = fortschritt(z);
+
+  box.innerHTML = `
+    <div style="display:flex;gap:1rem;align-items:flex-start;justify-content:space-between;flex-wrap:wrap">
+      <div style="flex:1;min-width:200px">
+        <input type="text" id="dTitel" value="${esc(z.titel)}" maxlength="160"
+               style="font-size:1.15rem;font-weight:600;padding:0.5rem 0.7rem">
+      </div>
+      <button class="btn btn-quiet btn-sm" id="dLoeschen">Ziel löschen</button>
+    </div>
+
+    <div class="balken" style="margin:1.1rem 0 0.5rem"><i style="width:${Math.round(f.anteil * 100)}%"></i></div>
+    <p class="tiny" style="margin:0 0 1.3rem">${esc(standText(z))}</p>
+
+    <div class="row">
+      <div class="field">
+        <label for="dStatus">Status</label>
+        <select id="dStatus">
+          ${STATUS.map((s) => `<option value="${s.id}"${s.id === z.status ? ' selected' : ''}>${s.label}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field">
+        <label for="dFaellig">Bis wann <span class="tiny">(optional)</span></label>
+        <input type="date" id="dFaellig" value="${esc(z.faellig || '')}">
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="dNotiz">Notiz</label>
+      <textarea id="dNotiz" placeholder="Warum ist dir das wichtig?">${esc(z.notiz || '')}</textarea>
+    </div>
+
+    <h3 style="margin:1.6rem 0 0.2rem;font-size:1.05rem">Schritte</h3>
+    <p class="tiny" style="margin:0 0 0.9rem">
+      So viele du willst. Der Haken setzt einen Schritt auf geschafft, das Feld daneben auf jeden anderen Stand.
+    </p>
+    <div class="zeile">
+      <input type="text" id="neuSchritt" placeholder="Nächster Schritt" maxlength="160">
+      <button class="btn btn-primary btn-sm" id="schrittBtn">Hinzufügen</button>
+    </div>
+    <div class="schritte" id="schritte"></div>`;
+
+  /* Kopf und Felder */
+  $('dTitel').addEventListener('change', () => {
+    const t = $('dTitel').value.trim();
+    if (!t) { $('dTitel').value = z.titel; return; }
+    z.titel = t; merken();
+  });
+  $('dStatus').addEventListener('change', () => { z.status = $('dStatus').value; merken(); zeichne(); });
+  $('dFaellig').addEventListener('change', () => { z.faellig = $('dFaellig').value || undefined; merken(); });
+  $('dNotiz').addEventListener('input', () => { z.notiz = $('dNotiz').value || undefined; merken(); });
+
+  $('dLoeschen').addEventListener('click', () => {
+    if (!confirm(`Ziel „${z.titel}“ mit allen Schritten löschen?`)) return;
+    daten.goals = daten.goals.filter((x) => x.id !== z.id);
+    gewaehlt = null;
+    merken(); zeichne();
+  });
+
+  /* Schritte */
+  const neuerSchritt = () => {
+    const t = $('neuSchritt').value.trim();
+    if (!t) return;
+    z.schritte = z.schritte || [];
+    z.schritte.push({ id: kennung(), titel: t, status: 'offen', createdAt: new Date().toISOString() });
+    $('neuSchritt').value = '';
+    merken(); zeichne();
+    $('neuSchritt')?.focus();
+  };
+  $('schrittBtn').addEventListener('click', neuerSchritt);
+  $('neuSchritt').addEventListener('keydown', (e) => { if (e.key === 'Enter') neuerSchritt(); });
+
+  const liste = $('schritte');
+  if (!(z.schritte || []).length) {
+    liste.innerHTML = '<p class="tiny" style="margin:0.6rem 0 0">Noch keine Schritte.</p>';
+    return;
+  }
+  liste.innerHTML = '';
+  for (const s of z.schritte) {
+    const el = document.createElement('div');
+    el.className = 'schritt'
+      + (s.status === 'geschafft' ? ' erledigt' : '')
+      + (s.status === 'verworfen' ? ' verworfen' : '');
+    el.innerHTML = `
+      <button class="haken ${s.status === 'geschafft' ? 'an' : ''}" type="button"
+              aria-label="Als geschafft markieren">✓</button>
+      <span class="titel">${esc(s.titel)}</span>
+      <select class="wahl">
+        ${STATUS.map((x) => `<option value="${x.id}"${x.id === s.status ? ' selected' : ''}>${x.kurz}</option>`).join('')}
+      </select>
+      <button class="btn btn-quiet btn-sm" type="button" data-weg>×</button>`;
+
+    el.querySelector('.haken').addEventListener('click', () => {
+      s.status = s.status === 'geschafft' ? 'offen' : 'geschafft';
+      merken(); zeichne();
+    });
+    el.querySelector('.wahl').addEventListener('change', (e) => {
+      s.status = e.target.value; merken(); zeichne();
+    });
+    el.querySelector('[data-weg]').addEventListener('click', () => {
+      z.schritte = z.schritte.filter((x) => x.id !== s.id);
+      merken(); zeichne();
+    });
+    liste.appendChild(el);
+  }
+}
+
+function zeichne() {
+  zeichneKennzahlen();
+  zeichneListe();
+  zeichneDetail();
+}
+
+/* ------------------------------------------------------------------ Start */
+(async () => {
+  try {
+    const out = await api('/api/data?app=ziele');
+    daten = { ...leereZiele(), ...out.data };
+    gewaehlt = daten.goals.find((z) => !abgeschlossen(z))?.id || daten.goals[0]?.id || null;
+    zeichne();
+  } catch (err) {
+    if (/Nicht angemeldet/.test(err.message)) return void (location.href = '/');
+    flash(err.message, 'error');
+    zeichne();
+  }
+})();
+</script>
+</body>
+</html>

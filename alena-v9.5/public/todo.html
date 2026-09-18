@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="de" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>To-Dos – Alena</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0d0a22">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/favicon.png" sizes="32x32">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Alena">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="/styles.css">
+<script src="/theme.js"></script>
+<style>
+  .kennzahlen { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 0.7rem; margin-bottom: 1.4rem; }
+
+  /* --------------------------------------------------------- Eingabe */
+  .eingabe { display: grid; gap: 0.7rem; margin-bottom: 1.4rem; }
+  .eingabe .zeile { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .eingabe .zeile input[type="text"] { flex: 1; min-width: 200px; }
+  .eingabe .zeile input[type="date"] { width: 165px; }
+  .eingabe .zeile select { width: auto; }
+
+  /* ------------------------------------------------------- Abschnitte */
+  .abschnitt { padding: 0; margin-bottom: 1.6rem; }
+  .abschnitt > h3 {
+    margin: 0 0 0.15rem; font-size: 1.05rem; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 0.55rem; flex-wrap: wrap;
+  }
+  .abschnitt > p.tiny { margin: 0 0 0.9rem; }
+  .liste { display: grid; gap: 0.5rem; }
+
+  /* ---------------------------------------------------------- Aufgabe */
+  .aufgabe {
+    display: flex; gap: 0.75rem; align-items: center;
+    padding: 0.8rem 1rem; border-radius: 14px;
+    background: var(--surface); border: 1px solid var(--line);
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  .aufgabe:hover { border-color: var(--line-strong); }
+  .aufgabe .mitte { flex: 1; min-width: 0; }
+  .aufgabe .titel { font-size: 0.97rem; font-weight: 500; word-break: break-word; }
+  .aufgabe .unten { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-top: 0.25rem; font-size: 0.78rem; color: var(--text-dim); }
+  .aufgabe.fertig .titel { text-decoration: line-through; color: var(--text-dim); }
+  .aufgabe.fertig { opacity: 0.62; }
+  .aufgabe.faellig { border-color: rgba(224, 86, 122, 0.45); background: rgba(224, 86, 122, 0.07); }
+
+  .haken {
+    flex: none; width: 26px; height: 26px; border-radius: 9px; cursor: pointer;
+    border: 1px solid var(--line-strong); background: none; color: transparent;
+    display: grid; place-items: center; font-size: 0.9rem; padding: 0;
+    transition: all 0.15s ease;
+  }
+  .haken:hover { border-color: var(--akzent-1); }
+  .haken.an { background: var(--accent); border-color: transparent; color: #fff; }
+
+  .stern {
+    flex: none; width: 30px; height: 30px; border-radius: 9px; cursor: pointer;
+    border: 1px solid transparent; background: none; color: var(--text-dim);
+    font-size: 1rem; padding: 0; line-height: 1;
+  }
+  .stern:hover { color: var(--akzent-2); }
+  .stern.an { color: #e8a13a; }
+
+  .werkzeug { display: flex; gap: 0.25rem; flex: none; }
+  .mini {
+    width: 30px; height: 30px; border-radius: 9px; cursor: pointer; padding: 0;
+    border: 1px solid var(--line); background: var(--input-bg); color: var(--text-dim);
+    font-size: 0.85rem; line-height: 1;
+  }
+  .mini:hover { border-color: var(--line-strong); color: var(--text); }
+  .mini[disabled] { opacity: 0.3; cursor: default; }
+
+  .schild {
+    display: inline-flex; align-items: center; gap: 0.3rem;
+    padding: 0.12rem 0.5rem; border-radius: 999px; font-size: 0.72rem; font-weight: 600;
+    border: 1px solid var(--line); color: var(--text-dim); white-space: nowrap;
+  }
+  .schild.hoch { color: #e0567a; border-color: rgba(224, 86, 122, 0.4); }
+  .schild.oft { color: #e8a13a; border-color: rgba(232, 161, 58, 0.4); }
+  .schild.spaet { color: #e0567a; border-color: rgba(224, 86, 122, 0.5); }
+
+  /* -------------------------------------------------------- Vorschläge */
+  .vorschlaege { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+  .vorschlag {
+    display: inline-flex; align-items: center; gap: 0.45rem; cursor: pointer;
+    padding: 0.45rem 0.85rem; border-radius: 999px; font: inherit; font-size: 0.86rem;
+    border: 1px solid var(--line); background: var(--input-bg); color: var(--text-soft);
+    transition: all 0.15s ease;
+  }
+  .vorschlag:hover { border-color: var(--akzent-1); color: var(--text); }
+  .vorschlag b { font-weight: 600; }
+  .vorschlag .zahl {
+    font-size: 0.72rem; padding: 0.05rem 0.4rem; border-radius: 999px;
+    background: var(--accent-soft); border: 1px solid var(--line); color: var(--eyebrow);
+  }
+
+  .leer { padding: 1.6rem 1rem; text-align: center; color: var(--text-dim); font-size: 0.92rem; }
+  details.archiv > summary { padding: 0.9rem 0; font-weight: 600; font-size: 1.02rem; }
+  details.archiv { border: none; background: none; }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <a class="brand" href="/app"><img src="/icons/logo.png" alt="" width="38" height="38"><span>Alena</span></a>
+    <div style="display:flex;align-items:center;gap:0.7rem">
+      <span class="tiny" id="saveState"></span>
+      <a class="btn btn-quiet btn-sm" href="/einstellungen">Einstellungen</a>
+      <a class="btn btn-quiet btn-sm" href="/app">Zurück</a>
+    </div>
+  </div>
+</header>
+
+<main class="wrap" style="padding-block:2rem 3rem">
+  <div class="section-head" style="margin-bottom:1.4rem">
+    <div class="eyebrow">To-Dos</div>
+    <h2>Was ansteht</h2>
+    <p>Alena merkt sich, was du oft einträgst, und schlägt es unten wieder vor.</p>
+  </div>
+
+  <div class="msg" id="msg" role="status"></div>
+
+  <div class="kennzahlen" id="kennzahlen"></div>
+
+  <!-- ------------------------------------------------------ Eingabe -->
+  <div class="card eingabe">
+    <div class="zeile">
+      <input type="text" id="neuTitel" placeholder="Was ist zu tun?" maxlength="200">
+      <input type="date" id="neuFaellig" aria-label="Fällig am">
+      <select id="neuPrio" aria-label="Priorität"></select>
+      <button class="btn btn-primary btn-sm" id="neuBtn">Hinzufügen</button>
+    </div>
+    <div style="display:flex;gap:0.7rem;align-items:center;flex-wrap:wrap">
+      <label for="sortierung" style="margin:0;font-size:0.85rem">Sortieren nach</label>
+      <select id="sortierung" style="width:auto"></select>
+      <span class="tiny" id="sortHinweis"></span>
+    </div>
+  </div>
+
+  <div id="bereiche"></div>
+
+  <!-- --------------------------------------------------- Vorschläge -->
+  <div class="card" id="merkkarte" style="margin-top:1.6rem" hidden>
+    <h3 style="margin:0 0 0.2rem;font-size:1.05rem">Häufig eingetragen</h3>
+    <p class="tiny" style="margin:0 0 1rem">
+      Das trägst du immer wieder ein. Ein Klick setzt es zurück auf die Liste.
+    </p>
+    <div class="vorschlaege" id="vorschlaege"></div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-bottom" style="margin-top:0;border-top:none">
+      <a class="tiny" href="/app">← Alle Apps</a>
+      <div class="theme-switch" role="group" aria-label="Darstellung">
+        <button type="button" data-theme-btn="dark">Dunkel</button>
+        <button type="button" data-theme-btn="light">Hell</button>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="/ambient.js" defer></script>
+<script type="module">
+import {
+  PRIOS, SORTIERUNGEN, prioLabel, leereTodos, merke, wieOft, istOft,
+  vorschlaege, abschnitte, zahlen, heuteISO, schluessel,
+} from '/todo-core.js';
+
+const $ = (id) => document.getElementById(id);
+const api = async (url, options = {}) => {
+  const res = await fetch(url, {
+    headers: { 'content-type': 'application/json' },
+    ...options,
+    body: options.body ? JSON.stringify(options.body) : undefined,
+  });
+  const out = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(out.error || 'Fehler');
+  return out;
+};
+const flash = (t, kind = 'ok') => {
+  const el = $('msg'); el.textContent = t; el.className = `msg ${kind} show`;
+  setTimeout(() => el.classList.remove('show'), 5000);
+};
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
+  ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const kennung = () => Math.random().toString(16).slice(2, 10);
+
+const heute = heuteISO();
+const fmt = (iso) => {
+  if (!iso) return '';
+  const tage = Math.round((new Date(iso + 'T12:00:00') - new Date(heute + 'T12:00:00')) / 86400000);
+  if (tage === 0) return 'heute';
+  if (tage === 1) return 'morgen';
+  if (tage === -1) return 'gestern';
+  if (tage < 0) return `${-tage} Tage überfällig`;
+  return new Date(iso + 'T12:00:00').toLocaleDateString('de-CH', { day: 'numeric', month: 'short' });
+};
+
+let daten = leereTodos();
+let timer = null;
+
+/* ------------------------------------------------------------ Speichern */
+function merken() {
+  $('saveState').textContent = 'Speichert …';
+  clearTimeout(timer);
+  timer = setTimeout(async () => {
+    try {
+      const out = await api('/api/data?app=todo', { method: 'PUT', body: { data: daten } });
+      daten = out.data;
+      $('saveState').textContent = 'Gespeichert';
+      setTimeout(() => { $('saveState').textContent = ''; }, 1600);
+      zeichne();
+    } catch (err) {
+      $('saveState').textContent = '';
+      flash(err.message, 'error');
+    }
+  }, 600);
+}
+
+/* ------------------------------------------------------- Neue Aufgabe */
+function hinzufuegen(titel, extra = {}) {
+  const t = String(titel || '').trim();
+  if (!t) return;
+  daten.tasks.unshift({
+    id: kennung(),
+    titel: t,
+    status: 'offen',
+    prioritaet: extra.prioritaet || 'normal',
+    faellig: extra.faellig || undefined,
+    favorit: extra.favorit || undefined,
+    createdAt: new Date().toISOString(),
+  });
+  merke(daten, t);            // fürs Gedächtnis
+  merken();
+  zeichne();
+}
+
+$('neuBtn').addEventListener('click', () => {
+  const titel = $('neuTitel').value;
+  if (!titel.trim()) return flash('Bitte etwas eintragen.', 'error');
+  hinzufuegen(titel, { faellig: $('neuFaellig').value || undefined, prioritaet: $('neuPrio').value });
+  $('neuTitel').value = '';
+  $('neuFaellig').value = '';
+  $('neuTitel').focus();
+});
+$('neuTitel').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('neuBtn').click(); });
+
+/* ------------------------------------------------------------ Auswahlen */
+$('neuPrio').innerHTML = PRIOS.map((p) =>
+  `<option value="${p.id}"${p.id === 'normal' ? ' selected' : ''}>${p.label}</option>`).join('');
+$('sortierung').innerHTML = SORTIERUNGEN.map((s) => `<option value="${s.id}">${s.label}</option>`).join('');
+$('sortierung').addEventListener('change', () => {
+  daten.sortierung = $('sortierung').value;
+  merken(); zeichne();
+});
+
+/* ------------------------------------------------------ Eine Aufgabe */
+function aufgabeEl(t, { position = null, gesamt = 0 } = {}) {
+  const el = document.createElement('div');
+  const fertig = t.status === 'erledigt';
+  const spaet = !fertig && t.faellig && t.faellig < heute;
+  el.className = 'aufgabe' + (fertig ? ' fertig' : '') + (spaet ? ' faellig' : '');
+
+  const oft = wieOft(daten, t.titel);
+  const marken = [];
+  if (t.faellig) marken.push(`<span class="schild${spaet ? ' spaet' : ''}">${esc(fmt(t.faellig))}</span>`);
+  if (t.prioritaet === 'hoch') marken.push('<span class="schild hoch">Hoch</span>');
+  if (oft >= 2) marken.push(`<span class="schild oft">${oft}× gebraucht</span>`);
+  if (fertig && t.erledigtAt) {
+    marken.push(`<span class="schild">erledigt ${esc(new Date(t.erledigtAt).toLocaleDateString('de-CH', { day: 'numeric', month: 'short' }))}</span>`);
+  }
+
+  const manuell = daten.sortierung === 'manuell' && position !== null;
+  el.innerHTML = `
+    <button class="haken ${fertig ? 'an' : ''}" type="button" aria-label="Erledigt">✓</button>
+    <div class="mitte">
+      <div class="titel">${esc(t.titel)}</div>
+      ${marken.length ? `<div class="unten">${marken.join('')}</div>` : ''}
+    </div>
+    ${fertig
+      ? '<button class="btn btn-quiet btn-sm" data-zurueck>Wieder aktivieren</button>'
+      : `<button class="stern ${t.favorit ? 'an' : ''}" type="button" aria-label="Favorit">${t.favorit ? '★' : '☆'}</button>`}
+    <div class="werkzeug">
+      ${manuell ? `
+        <button class="mini" type="button" data-hoch ${position === 0 ? 'disabled' : ''} aria-label="Nach oben">↑</button>
+        <button class="mini" type="button" data-runter ${position === gesamt - 1 ? 'disabled' : ''} aria-label="Nach unten">↓</button>` : ''}
+      <button class="mini" type="button" data-weg aria-label="Löschen">×</button>
+    </div>`;
+
+  el.querySelector('.haken').addEventListener('click', () => {
+    if (fertig) {
+      t.status = 'offen';
+      delete t.erledigtAt;
+    } else {
+      t.status = 'erledigt';
+      t.erledigtAt = new Date().toISOString();
+    }
+    merken(); zeichne();
+  });
+
+  el.querySelector('.stern')?.addEventListener('click', () => {
+    t.favorit = t.favorit ? undefined : true;
+    // Der Favorit gilt auch fürs Gedächtnis, damit er dort oben bleibt.
+    const k = schluessel(t.titel);
+    if (daten.verlauf?.[k]) daten.verlauf[k].favorit = t.favorit || undefined;
+    merken(); zeichne();
+  });
+
+  el.querySelector('[data-zurueck]')?.addEventListener('click', () => {
+    t.status = 'offen';
+    delete t.erledigtAt;
+    t.createdAt = new Date().toISOString();
+    merke(daten, t.titel);
+    merken(); zeichne();
+    flash(`„${t.titel}“ steht wieder auf der Liste.`);
+  });
+
+  el.querySelector('[data-weg]').addEventListener('click', () => {
+    daten.tasks = daten.tasks.filter((x) => x.id !== t.id);
+    merken(); zeichne();
+  });
+
+  el.querySelector('[data-hoch]')?.addEventListener('click', () => verschiebe(t, -1));
+  el.querySelector('[data-runter]')?.addEventListener('click', () => verschiebe(t, +1));
+  return el;
+}
+
+/** In der eigenen Reihenfolge um eine Stelle verschieben. */
+function verschiebe(t, richtung) {
+  const offen = daten.tasks.filter((x) => x.status !== 'erledigt' && Boolean(x.favorit) === Boolean(t.favorit));
+  const i = offen.findIndex((x) => x.id === t.id);
+  const j = i + richtung;
+  if (i < 0 || j < 0 || j >= offen.length) return;
+
+  const a = daten.tasks.findIndex((x) => x.id === offen[i].id);
+  const b = daten.tasks.findIndex((x) => x.id === offen[j].id);
+  [daten.tasks[a], daten.tasks[b]] = [daten.tasks[b], daten.tasks[a]];
+  merken(); zeichne();
+}
+
+/* ------------------------------------------------------------- Zeichnen */
+function abschnittEl({ titel, hinweis, aufgaben, klasse = '', mitPosition = false }) {
+  const box = document.createElement('section');
+  box.className = 'abschnitt ' + klasse;
+  box.innerHTML = `<h3>${titel}</h3>${hinweis ? `<p class="tiny">${hinweis}</p>` : ''}<div class="liste"></div>`;
+  const liste = box.querySelector('.liste');
+  aufgaben.forEach((t, i) => liste.appendChild(
+    aufgabeEl(t, mitPosition ? { position: i, gesamt: aufgaben.length } : {})
+  ));
+  return box;
+}
+
+function zeichne() {
+  const z = zahlen(daten, heute);
+  $('kennzahlen').innerHTML = `
+    <div class="stat"><b>${z.offen}</b><span>offen</span></div>
+    <div class="stat"><b>${z.heute}</b><span>heute fällig</span></div>
+    <div class="stat"><b>${z.ueberfaellig}</b><span>überfällig</span></div>
+    <div class="stat"><b>${z.erledigt}</b><span>erledigt</span></div>`;
+
+  $('sortierung').value = daten.sortierung || 'manuell';
+  $('sortHinweis').textContent = daten.sortierung === 'manuell'
+    ? 'Mit den Pfeilen verschieben.' : '';
+
+  const a = abschnitte(daten, heute);
+  const box = $('bereiche');
+  box.innerHTML = '';
+
+  if (a.ueberfaellig.length) {
+    const oft = a.ueberfaellig.filter((t) => istOft(daten, t.titel)).length;
+    box.appendChild(abschnittEl({
+      titel: `⚠️ Überfällig <span class="schild spaet">${a.ueberfaellig.length}</span>`,
+      hinweis: oft
+        ? `Davon ${oft === 1 ? 'eine Sache, die du' : `${oft} Sachen, die du`} immer wieder einträgst – die stehen zuoberst.`
+        : 'Das Datum ist durch.',
+      aufgaben: a.ueberfaellig,
+    }));
+  }
+
+  if (a.favoriten.length) {
+    box.appendChild(abschnittEl({
+      titel: '★ Favoriten',
+      hinweis: 'Was dir wichtig ist, bleibt hier oben.',
+      aufgaben: a.favoriten,
+      mitPosition: true,
+    }));
+  }
+
+  box.appendChild(abschnittEl({
+    titel: 'Offen',
+    hinweis: '',
+    aufgaben: a.offen,
+    mitPosition: true,
+  }));
+  if (!a.offen.length && !a.favoriten.length && !a.ueberfaellig.length) {
+    box.querySelector('.abschnitt:last-child .liste').innerHTML =
+      '<div class="leer">Nichts offen. Trag oben etwas ein.</div>';
+  }
+
+  if (a.erledigt.length) {
+    const d = document.createElement('details');
+    d.className = 'archiv';
+    d.innerHTML = `<summary>Erledigt (${a.erledigt.length})</summary>
+      <p class="tiny" style="margin:0 0 0.9rem">
+        Bleibt liegen, damit du Wiederkehrendes mit einem Klick zurückholen kannst.
+      </p>
+      <div class="liste"></div>`;
+    const liste = d.querySelector('.liste');
+    a.erledigt.slice(0, 40).forEach((t) => liste.appendChild(aufgabeEl(t)));
+    box.appendChild(d);
+  }
+
+  /* Vorschläge aus dem Gedächtnis */
+  const vs = vorschlaege(daten, 8);
+  $('merkkarte').hidden = vs.length === 0;
+  $('vorschlaege').innerHTML = '';
+  for (const v of vs) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'vorschlag';
+    b.innerHTML = `${v.favorit ? '★ ' : ''}<b>${esc(v.titel)}</b><span class="zahl">${v.anzahl}×</span>`;
+    b.addEventListener('click', () => {
+      hinzufuegen(v.titel, { favorit: v.favorit });
+      flash(`„${v.titel}“ hinzugefügt.`);
+    });
+    $('vorschlaege').appendChild(b);
+  }
+}
+
+/* ------------------------------------------------------------------ Start */
+(async () => {
+  try {
+    const out = await api('/api/data?app=todo');
+    daten = { ...leereTodos(), ...out.data };
+    zeichne();
+  } catch (err) {
+    if (/Nicht angemeldet/.test(err.message)) return void (location.href = '/');
+    flash(err.message, 'error');
+    zeichne();
+  }
+})();
+</script>
+</body>
+</html>
